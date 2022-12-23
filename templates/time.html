@@ -1,0 +1,52 @@
+<html>
+    <head>
+        <title>RCTools - RulerCraft Time</title>
+        
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="RulerCraft Republican Calendar" />
+        <meta property="og:description" content="The RulerCraft calendar." />
+        <meta property="og:image" content="https://external-preview.redd.it/gt6ZIMAMbOHmxl1Yu6DYoMQVFFzRlML0bayiDcWhU0c.jpg?auto=webp&s=c15f25bd1d78d842136aa49afa080446b167abca" />
+        <meta name="theme-color" content="#6F01FF">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
+
+        <link rel="stylesheet" href="/static/css/global.css">
+        <link rel="stylesheet" href="/static/css/time.css">
+        
+    </head>
+    
+    <body>
+        <div class="navbar noselect" id="navbar">
+            <a class="navbar-item navbar-logo" href="/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
+            <a class="navbar-item" href="/time"><div class="all-center">Time</div></a>
+            <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right"></i></div></div>
+        </div>
+        <input id="specific-date" class="specific-date" type="datetime-local" placeholder="Custom Time" >
+        <input id="rl-date" class="specific-date rc-date" type="datetime-local" placeholder="RL Time" >
+        <div class="time-title horizontal-center" id="title">RulerCraft Republican Calendar</div>
+        <div class="time-title time horizontal-center" id="time"></div>
+        <div class="time-title time time-small horizontal-center">
+            <span class="time-small-heading" id="rc-time-label">RulerCraft time: </span>
+            <span id="time-small">
+
+            </span>
+            <span class="button" style="margin-left:15px" id="copy"><i class="fa-solid fa-copy"></i> </span>
+            <span class="button" style="margin-left:15px" id="geturl"><i class="fa-solid fa-copy"></i> URL</span>
+        </div>
+        <div class="time-title time time-small horizontal-center" style="top:calc(55% + 100px)">
+            <span class="time-small-heading" id="rl-time-label">Real time: </span>
+            <span id="rl-time-small">
+
+            </span>
+            <span class="button" style="margin-left:15px" id="copy-rl"><i class="fa-solid fa-copy"></i></span>
+        </div>
+
+        <div class="options">
+            <input type="checkbox" id="show_seconds" checked><label for="show_seconds" class="noselect">Show Seconds</label>
+        </div>
+    </body>
+    <script src="/static/js/global.js"></script>
+    <script src="/static/js/time.js"></script>
+    
+</html>

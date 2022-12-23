@@ -1,0 +1,53 @@
+
+
+
+.time-title {
+    font-size:50px;
+    color:white;
+    position:absolute;
+    top:calc(100px + 2%);
+    width:90%;
+    text-align: center;
+}
+
+.time {
+    font-size:70px;
+    top:calc(50% - 200px)
+}
+
+.specific-date {
+    position:absolute;
+    bottom:10%;
+    background-color:#36393F;
+    padding:20px 50px;
+    border-radius:5px;
+    border:2px solid white;
+    font-size:20px;
+    color:white;
+    cursor:pointer;
+    left:calc(50% - 400px)
+}
+
+.rc-date {
+    left:calc(50% + 100px)
+}
+
+.time-small {
+    font-size:30px;
+    top:calc(55%)
+}
+
+
+
+.options {
+    width:200px;
+    bottom:15px;
+    right:0;
+    position:absolute;
+    color:white
+}
+
+.time-small-heading {
+    color:rgb(163, 163, 163);
+    font-weight:200
+}

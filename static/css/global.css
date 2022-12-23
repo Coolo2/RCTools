@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+body {
+    background-color:#23272A;
+    font-family: 'Montserrat';
+    font-size: 22px;
+    margin:0
+}
+
+.button {
+    padding: 10px 15px;
+    border: 2px solid white;
+    color:white;
+    background-color:#36393F;
+    border-radius:4px;
+    cursor:pointer;
+    transition: filter .1s, border-radius .2s
+}
+.button:hover {
+    filter:brightness(200%);
+    border-radius:1px
+}
+
+.navbar {
+    border-bottom-right-radius: 10px;
+    border-right: 3px solid white;
+    border-bottom: 3px solid white;
+    height:50px;
+    background-color:#1a1d1f;
+    position:fixed;
+    
+}
+.navbar-item {
+    height:100%;
+    cursor:pointer;
+    transition: .1s background-color, width .5s;
+    color:white;
+    float:left;
+    position:relative;
+    overflow-x:hidden;
+    white-space: nowrap ;
+}
+.navbar-item:hover {
+    background-color:rgb(255, 255, 255, 0.5)
+}
+.navbar-logo {
+    font-weight: bold;
+}
+.navbar-collapse {
+    height:100%;
+    width:5vw;
+    cursor:pointer;
+    transition: .1s background-color;
+    color:white;
+    float:left;
+    position:relative;
+}
+.transition {
+    transition: all .5s
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+.vertical-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.all-center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.horizontal-center {
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    -ms-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+}
