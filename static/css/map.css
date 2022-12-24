@@ -1,0 +1,60 @@
+
+#map {
+    height:100%;
+    position:absolute;
+    top:0;
+    width:100%;
+    z-index:0
+}
+.leaflet-control-zoom { position: absolute; top: 55px }
+
+.edit {
+    border-bottom-left-radius: 10px;
+    border-left: 3px solid white;
+    border-bottom: 3px solid white;
+    height:50px;
+    background-color:#1a1d1f;
+    position:fixed;
+    right:0;
+    z-index:10;
+    box-shadow: 0 0 10px rgb(0, 0, 0, 0.8)
+}
+.edit-item {
+    height:100%;
+    cursor:pointer;
+    transition: .1s background-color, width .5s;
+    color:white;
+    float:right;
+    position:relative;
+    overflow-x:hidden;
+    white-space: nowrap ;
+    width:10vw;
+    border-left:1px solid white
+}
+.edit-item:hover {
+    background-color:rgb(255, 255, 255, 0.5)
+}
+#edit-user {
+    height:100%;
+    color:white;
+    float:right;
+    position:relative;
+    overflow: hidden;
+    width:12vw;
+    font-size:17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.login-modal {
+    background-color:#23272A;
+    color:white;
+    overflow:none;
+    box-sizing: border-box;
+    overflow-y:auto;
+    width:75%;
+    height:80%;
+    position: relative;
+    border-radius:15px;
+    box-shadow: 10px 10px 20px rgb(0, 0, 0, 0.2)
+}

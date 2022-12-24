@@ -14,11 +14,27 @@ body {
     background-color:#36393F;
     border-radius:4px;
     cursor:pointer;
-    transition: filter .1s, border-radius .2s
+    transition: filter .1s, border-radius .2s;
+    font-size:20px;
+    text-decoration: none;
 }
 .button:hover {
     filter:brightness(200%);
     border-radius:1px
+}
+.button-image {
+    margin-left:10px;
+    
+    height:20px;
+}
+
+.input {
+    padding: 10px 15px;
+    border: 2px solid white;
+    color:white;
+    background-color:#36393F;
+    border-radius:4px;
+    font-size:20px;
 }
 
 .navbar {
@@ -28,7 +44,8 @@ body {
     height:50px;
     background-color:#1a1d1f;
     position:fixed;
-    
+    z-index:10;
+    box-shadow: 0 0 10px rgb(0, 0, 0, 0.8)
 }
 .navbar-item {
     height:100%;

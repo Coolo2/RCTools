@@ -1,0 +1,165 @@
+<html>
+    <head>
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="RCTools - RulerCraft Claim Map" />
+        <meta property="og:description" content="A map of nations' wanted claims and claimed regions - A part of RCTools by Coolo2" />
+        <meta property="og:image" content="/map/image" />
+        <meta name="theme-color" content="#6F01FF">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" crossorigin=""/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+        <link rel="stylesheet" href="/static/css/_micromodal.css">
+
+        <link rel="stylesheet" href="/static/css/global.css">
+        <link rel="stylesheet" href="/static/css/map.css">
+        <title>RCTools - Map</title>
+    </head>
+    <body>
+        <div class="navbar noselect" id="navbar">
+            <a class="navbar-item navbar-logo" href="/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
+            <a class="navbar-item" href="/time"><div class="all-center">Time</div></a>
+            <a class="navbar-item" href="/map"><div class="all-center">Map</div></a>
+            <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right transition"></i></div></div>
+        </div>
+        <div class="edit noselect" id="edit">
+            <div class="edit-item" id="edit-button"><div class="all-center">Edit Map</div></div>
+            <div class="edit-item" id="edit-admin-button" style="display:none"><div class="all-center">Admin</div></div>
+            <div id="edit-user" style="display:none"><div class="all-center" id="edit-user-info"></div></div>
+            <a class="edit-item" href="/logout" style="width:50px;display:none" id="edit-logout"><div class="all-center"><i class="fa-solid fa-right-from-bracket"></i></div></a>
+        </div>
+        <div id="map"></div>
+
+        <div class="modal micromodal-slide noselect" id="modal-login" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <div class="modal-title">Please Log In to continue</div>
+                    <div class="modal-text">Log-in through Discord (reccomended) or message Coolo2#5499 for a code</div>
+                    <div class="modal-text">- - -</div>
+                    <div class="modal-text">Discord Login. You may still require authorisation to edit the map; message Coolo2#5499 on Discord to gain access</div>
+                    <div class="modal-text">
+                        <a class="button" style="background-color:#5865F3;" href="/login">
+                            <span>Login with</span> 
+                            <span><img src="/static/images/discord.png" class="button-image" style="filter:brightness(0) invert(1);"></span>
+                        </a>
+                    </div>
+                    <div class="modal-text">- - -</div>
+                    <div class="modal-text">Code Login. You can also request a code to login with instead. Message Coolo2#5499 to get a code</div>
+                    <div class="modal-text">
+                        <input class="input" placeholder="Enter code here..." id="login-code">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal micromodal-slide noselect" id="modal-waiting" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <div class="modal-title">Waiting for editor access...</div>
+                    <div class="modal-text">
+                        Coolo2#5499 has been notified about your request to become an editor. 
+                        When they are available, they will respond to your request. Please be 
+                        patient. If you do not get a reply within a day, please consider 
+                        messaging them directly.
+                    </div>
+                    <div class="modal-text">
+                        Thanks :)
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal micromodal-slide noselect" id="modal-textinput" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <div class="modal-title">Enter Marker Label</div>
+                    <div class="modal-text">
+                        <input class="input" id="text" placeholder="Enter text here..."><button id="submittext" class="button">Submit</button>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="modal micromodal-slide " id="modal-admin" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <div class="modal-title">Admin Tools</div>
+                    <div class="modal-text" id="adminCode"></div>
+                    <div class="modal-text">
+                        Multiple tools below to assist
+                    </div>
+                    <div class="modal-text">
+                        Add/move editor
+                        <form action="/api/add_editor">
+                            <input type="text" name="nation" class="input" placeholder="Nation name (exact)">
+                            <input type="text" name="name" class="input" placeholder="User Minecraft name">
+                            <input type="text" name="id" class="input" placeholder="Discord ID (add only)">
+                            <input type="submit" class="button" value="Submit">
+                        </form> 
+                    </div>
+                    <div class="modal-text">
+                        Remove editor
+                        <form action="/api/remove_editor">
+                            <input type="text" name="name" class="input" placeholder="Editor Minecraft name">
+                            <input type="text" name="nation" class="input" placeholder="Nation name">
+                            <input type="submit" class="button" value="Submit">
+                        </form> 
+                    </div>
+                    <div class="modal-text">
+                        Delete Nation claims and Editors
+                        <form action="/api/remove_nation">
+                            <input type="text" name="nation" class="input" placeholder="Nation name">
+                            <input type="submit" class="button" value="Submit">
+                        </form> 
+                    </div>
+                    <div class="modal-text">---</div>
+                    <div class="modal-text">
+                        View Raw databases 
+                        <a class="button" href="https://helperdata.glitch.me/view/rctools/editors.json">Editors</a>
+                        <a class="button" href="https://helperdata.glitch.me/view/rctools/claims.json">Claims</a>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="modal micromodal-slide " id="modal-edit" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <div class="modal-title">Map Editor</div>
+                    <div class="modal-text">---</div>
+                    <div class="modal-text" style="display:none" id="select-nations-wrapper">
+                        You are a verified map editor and therefore can edit the map as any nation!
+                        <select id="select-nations" class="button">
+                            Select a nation to view as
+                        </select>
+                    </div>
+                    <div class="modal-text">---</div>
+                    <div class="modal-text">How to edit the map:</div>
+                    <div class="modal-text">
+                        <img src="/static/images/controls.png" height="100px">
+                        <br>
+                        You have controls at the bottom left of your map. You can place shapes and markers. Shapes are a claim area and markers can be text to put on a spot for extra information. 
+                        You can also edit and delete such shapes and markers.
+                    </div>
+                    <div class="modal-text">
+                        <img src="/static/images/controls_polygon.png" height="100px">
+                        <br>
+                        When using one of these controls, extra controls will pop up. The use of these is self-explanatory.
+                    </div>
+                    <div class="modal-text">
+                        <img src="/static/images/edit_polygon.png" height="100px">
+                        <br>
+                        When placing or editing a shape, you click on the map where you want to add a point. Once you've added a point, you can drag it around to have it in the correct place you desire.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="/static/js/_micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
+
+    <script src="/static/js/global.js"></script>
+    <script src="/static/js/map.js"></script>
+</html>

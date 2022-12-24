@@ -1,9 +1,10 @@
 discord/
 sql/
 *.db
+cache/
 
 test.py
-
+discordoauth/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
