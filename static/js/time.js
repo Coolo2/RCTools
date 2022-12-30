@@ -21,6 +21,7 @@ time_small_rl = document.getElementById("rl-time-small")
 copy_rl = document.getElementById("copy-rl")
 geturl = document.getElementById("geturl")
 title = document.getElementById("title")
+sun = document.getElementById("sun")
 
 var overwriteTime = null
 var overwriteRCTime = null
@@ -32,36 +33,43 @@ function getSetting(name) {
     return options[name]
 }
 
+var startTime
+var rc_date 
+var updateOffset = 80
+var rc_time_overwrite
+var rl_time_overwrite
+var start_rc_date
+
 updateTime = async function() {
+
+    
     
 
-    if (overwriteTime) {
-        var now = overwriteTime
-        input.style.backgroundColor = "green"
-        rl_date.style.backgroundColor = "#36393F"
+    if (rc_time_overwrite) {
+        var now = rl_time_overwrite;
+        
+        rc_date = rc_time_overwrite
+        
     } else {
         var now = new Date;
+        input.value = now.toISOString().substring(0,16);
+
+        if (!start_rc_date) {
+            startTime = new Date
+
+            r = await fetch("/api/time")
+            j = await r.json()
+            start_rc_date = new Date(j.time)
+            console.log(rc_date)
+        }
+
+        diff = (new Date().getTime() - startTime.getTime())
+        rc_date = new Date(start_rc_date.getTime() + diff*12*24 )
     }
 
-    var days_since_epoch = (now.getTime() - epoch.getTime() + epoch.getTimezoneOffset()*60000) / day_length_milliseconds
-
-    rc_years = days_since_epoch / 30.4375
-    rc_years_floor = Math.floor(rc_years)
-
-    rc_months = (rc_years - rc_years_floor) * 12
-    rc_months_floor = Math.floor(rc_months)
-
-    rc_days = (rc_months - rc_months_floor) * 30.4375
-    rc_days_floor = Math.floor(rc_days)
-
-    rc_hours = (rc_days - rc_days_floor) * 24
-    rc_hours_floor = Math.floor(rc_hours)
-
-    rc_minutes = (rc_hours - rc_hours_floor) * 60
-    rc_minutes_floor = Math.floor(rc_minutes)
-
-    rc_seconds = (rc_minutes - rc_minutes_floor) * 60
-    rc_seconds_floor = Math.floor(rc_seconds)
+    
+    
+    /*
 
     // Set custom RC time from URL arguments
     if (URLParams.get("customDate") && !stopCustomURL) {
@@ -108,24 +116,51 @@ updateTime = async function() {
         rl_date.style.backgroundColor = "green"
     } 
 
-    rc_date = new Date(rc_years_floor+1970, rc_months_floor, rc_days_floor+1, rc_hours_floor, rc_minutes_floor, rc_seconds_floor)
+    rc_date = new Date(rc_years_floor+1970, rc_months_floor, rc_days_floor+1, rc_hours_floor, rc_minutes_floor, rc_seconds_floor)*/
+    
+    rc_years_floor = rc_date.getYear()+1900
+    rc_months_floor = rc_date.getMonth()
+    rc_days_floor = rc_date.getDate()-1
+    rc_hours_floor = rc_date.getHours()
+    rc_minutes_floor = rc_date.getMinutes()
+    rc_seconds_floor = rc_date.getSeconds()
     
     // Change RL time if RC time is overwritten
-    if (overwriteRCTime) {
+    /*if (overwriteRCTime) {
         now = new Date(epoch.getTime() + rc_date.getTime()/12 - now.getTimezoneOffset()*60000)
         if (now.getTimezoneOffset() % 180 == 0 || [-480, 480, -330].includes(now.getTimezoneOffset())) {
             now = new Date(now.getTime() + 60*60*1000)
         }
-    }
+    }*/
+
+    seconds_through_day = rc_date.getSeconds() + (rc_date.getMinutes() * 60) + (rc_date.getHours() * 3600)
+    console.log(seconds_through_day)
+
+    alg = window.innerHeight - ( ((window.innerHeight*1.5/(86400-18000-25200)) * (seconds_through_day - 25200)) )
+    if (alg < 0) {sunTop = (0-alg)-100} else {sunTop = alg}
+
+    document.getElementById("background-day").style.background = `linear-gradient(to bottom, #94c5f8 1%,#a6e6ff ${sunTop}px,#b1b5ea 100%)`
+    document.getElementById("background-sunrise").style.background = `linear-gradient(to bottom, #40405c 0%,#6f71aa ${sunTop}px,#8a76ab 100%)`
+    document.getElementById("background-sunset").style.background = `linear-gradient(to bottom, #154277 0%,#576e71 ${sunTop-200}px,#e1c45e ${sunTop+20}px,#b26339 100%)`
+
+
+    document.getElementById("background-night-am").style.opacity = 1 - (seconds_through_day) / 84600
+    if (seconds_through_day > 20000) {document.getElementById("background-sunrise").style.opacity = 1 - (seconds_through_day - 25200) / 36000} else {document.getElementById("background-sunrise").style.opacity = 0}
+    document.getElementById("background-day").style.opacity = (seconds_through_day - 25200) / 36000
+    document.getElementById("background-sunset").style.opacity = (seconds_through_day - 61200) / 10000
+    document.getElementById("background-night-pm").style.opacity = (seconds_through_day - 75000) / 10000
+    console.log((seconds_through_day - 61200) / 10000)
+
+    sun.style.top = sunTop
 
     // Update screen
 
     time.innerHTML = `Year ${rc_years_floor}, Month ${rc_months_floor+1}, Day ${rc_days_floor+1}, Hour ${rc_hours_floor}, Minute ${rc_minutes_floor}`
-    if (!getSetting("hide_seconds")) {
+    if (getSetting("show_seconds")) {
         time.innerHTML += `, Second ${rc_seconds_floor}`
     }
 
-    small_time = `${ordinal_suffix_of(rc_days_floor)} ${months[rc_months_floor]} ${rc_years_floor.toString().padStart(4, '0')}, ${rc_hours_floor.toString().padStart(2, '0')}:${rc_minutes_floor.toString().padStart(2, '0')}`
+    small_time = `${ordinal_suffix_of(rc_days_floor+1)} ${months[rc_months_floor]} ${rc_years_floor.toString().padStart(4, '0')}, ${rc_hours_floor.toString().padStart(2, '0')}:${rc_minutes_floor.toString().padStart(2, '0')}`
 
     if (small_time != time_small.innerHTML) {
         time_small.innerHTML = small_time
@@ -139,33 +174,58 @@ updateTime = async function() {
     rc_iso_time = `${rc_years_floor.toString().padStart(4, '0')}-${(rc_months_floor+1).toString().padStart(2, '0')}-${(rc_days_floor+1).toString().padStart(2, '0')}T${rc_hours_floor.toString().padStart(2, '0')}:${rc_minutes_floor.toString().padStart(2, '0')}`
         
     rl_date.value = rc_iso_time
-    input.value = (new Date(now.getTime() - now.getTimezoneOffset()*60000)).toISOString().substring(0,16);
+    
 
 }
 
-setInterval(updateTime, 80)
+var i = setInterval(updateTime, updateOffset)
 
-updateTime()
 
 input.oninput = async function(e) {
     if (isNaN(e.target.valueAsNumber)) {
-        overwriteTime = null
+        rc_time_overwrite = null
+        rc_time_overwrite = null
         input.style.backgroundColor = "#36393F"
+        i = setInterval(updateTime, updateOffset)
     } else {
-        d = new Date(e.target.valueAsNumber + new Date().getTimezoneOffset()*60000)
-        overwriteTime = d 
+        clearInterval(i);
+        
+        d = new Date(e.target.valueAsNumber - new Date().getTimezoneOffset()*60000)
+
+        input.style.backgroundColor = "green"
+        rl_date.style.backgroundColor = "#36393F"
+        r = await fetch(`/api/time/convert?rltime=${encodeURIComponent(formatDate(d))}`)
+        j = await r.json()
+        
+        rl_time_overwrite = d
+        rc_time_overwrite = new Date(j.time)
+        await updateTime()
     }
 } 
 
 rl_date.oninput = async function(e) {
     if (isNaN(e.target.valueAsNumber)) {
-        overwriteRCTime = null
+        rc_time_overwrite = null
+        rc_time_overwrite = null
         stopCustomURL = true
         rl_date.style.backgroundColor = "#36393F"
+        i = setInterval(updateTime, updateOffset)
         
     } else {
+        clearInterval(i);
+
         d = new Date(e.target.valueAsNumber)
-        overwriteRCTime = d 
+        r = await fetch(`/api/time/convert?rctime=${encodeURIComponent(formatDate(d))}`)
+        j = await r.json()
+
+        input.style.backgroundColor = "#36393F"
+        rl_date.style.backgroundColor = "green"
+
+        rc_time_overwrite = d
+        rl_time_overwrite = new Date(j.time)
+
+        input.value = rl_time_overwrite.toISOString().substring(0,16);
+        await updateTime()
     }
 }
 
@@ -222,11 +282,11 @@ show_seconds.oninput = async function(e) {
         localStorage.setItem("options", JSON.stringify({}))
     }
     options = JSON.parse(localStorage.getItem("options"))
-    options.hide_seconds = !show_seconds.checked
+    options.show_seconds = show_seconds.checked
     localStorage.setItem("options", JSON.stringify(options))
 }
 
-show_seconds.checked = !getSetting("hide_seconds")
+show_seconds.checked = getSetting("show_seconds")
 resize = async function() {
     console.log(typeof window.innerWidth)
 

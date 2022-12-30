@@ -51,9 +51,9 @@ async function refreshNavbar() {
         if (element.classList.contains("navbar-item") ) {
             if (window.localStorage.getItem("navbarClosed") == null || window.localStorage.getItem("navbarClosed") == "false") {
                 if (element.classList.contains("navbar-logo")) {
-                    element.style.width = "25vw"
+                    element.style.width = "20vw"
                 } else {
-                    element.style.width = "15vw"
+                    element.style.width = "10vw"
                 }
                 navbar_chevron.children[0].children[0].style.transform = "rotate(180deg)"
                 navbar_chevron.setAttribute("aria-label", "Collapse Navbar")
@@ -70,4 +70,10 @@ if (window.location.pathname == "/") {
     window.localStorage.setItem("navbarClosed", true)
 }
 refreshNavbar()
+
+function formatDate(d) {
+    var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+((parseInt(d.getMinutes()/5)*5).toString().length==2?(parseInt(d.getMinutes()/5)*5).toString():"0"+(parseInt(d.getMinutes()/5)*5).toString())+":00";
+    return date_format_str
+
+}
 

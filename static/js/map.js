@@ -16,6 +16,8 @@ edit_admin_button = document.getElementById("edit-admin-button")
 edit_button = document.getElementById("edit-button")
 login_code = document.getElementById("login-code")
 select_nations = document.getElementById("select-nations")
+nations_select_class = document.querySelectorAll(".nations-select")
+editors_select_class = document.querySelectorAll(".editors-select")
 
 login_code.oninput = async function() {
     r = await fetch(`/api/auth?code=${login_code.value}`)
@@ -27,7 +29,7 @@ login_code.oninput = async function() {
     }
 }
 // dont remove
-osmUrl = 'http://tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg'
+osmUrl = 'http://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.jpg'
 var map = L.map('map', {}).setView([51.505, -0.09], 13);
 L.tileLayer(osmUrl, {
     maxZoom: 6,
@@ -77,6 +79,7 @@ async function auth() {
     
     if (location.search.includes("admin") && user.admin) {
         MicroModal.show('modal-admin'); // [1]
+        window.history.pushState("","", "/map");
     }   
     if (user.id) {
         document.getElementById("edit-logout").style.display = "block"
@@ -147,8 +150,7 @@ edit_admin_button.onclick = async function() {
 
 function customTip() {
     this.unbindTooltip();
-    
-    if(!this.isPopupOpen()) this.bindTooltip(`<b>${this.data.nation}</b> - ${this.data.name}`).openTooltip();
+    if(!this.isPopupOpen()) this.bindTooltip(`<b>${this.data.nation}</b> - added by <i>${this.data.name}</i>`).openTooltip();
 }
 
 var markerLayer
@@ -234,6 +236,18 @@ select_nations.oninput = async function(e) {
     
 }
 
+async function expandEditor(e) {
+    
+    m = document.getElementById(e.id + "-more") 
+    h = "30px"
+    
+    if (m.style.height == h) {
+        m.style.height = "0"
+    } else {
+        m.style.height = h
+    }
+}
+
 async function load_claims() {
     
     r = await fetch("/api/claims")
@@ -245,26 +259,65 @@ async function load_claims() {
     nations = d.nations 
     claims = d.claims 
 
-    for (nation in nations) {
-        select_nations.innerHTML += `<option value="${nation}" style="color:${nations[nation].color}">${nation}</option>`
+    for (element of nations_select_class) {
+        for (nation in nations) {
+            element.innerHTML += `<option value="${nation}" style="color:${nations[nation].color}">${nation}</option>`
+        }
     }
     select_nations.value = viewNation
+    
+    for (nation in d.editors) {
+        for (editor in d.editors[nation]) {
+            for (element of editors_select_class) {
+                element.innerHTML += `<option value="${d.editors[nation][editor]}" style="color:${nations[nation].color}">${d.editors[nation][editor]} (${nation})</option>`
+            }
+
+            examples = [document.getElementById("editor").innerHTML, document.getElementById("admin-editor").innerHTML]
+
+            counter = 0
+            for (example of examples) {
+                example = example.split("{name}").join(d.editors[nation][editor])
+                example = example.replace("{image}", `https://minotar.net/avatar/${d.editors[nation][editor]}`)
+                example = example.replace("{nation}", nation)
+                example = example.replace("{name_uri}", encodeURIComponent(d.editors[nation][editor]))
+                example = example.replace("{onerror}", 'onerror="this.src=`https://i.pinimg.com/originals/54/f4/b5/54f4b55a59ff9ddf2a2655c7f35e4356.jpg`;this.onerror=null"')
+
+                if (d.global_editors.includes(editor)) {
+                    example = example.replace("(color)", "white")
+                    example = example.replace("{description}", `${d.editors[nation][editor]} is a global editor. They originate from ${nation}`)
+                } else {
+                    example = example.replace("(color)", nations[nation].color)
+                    example = example.replace("{description}", `${d.editors[nation][editor]} is an editor for ${nation}`)
+                }
+                examples[counter] = example
+                counter += 1;
+            }
+            
+            document.getElementById("editors").innerHTML += examples[0]
+            document.getElementById("admin-editors").innerHTML += examples[1]
+        }
+        
+    }
 
     for (nation in claims) {
         nation_claims = claims[nation]
 
         for (claim of nation_claims) {
             
+            
             layer = L.geoJSON(claim.layer, { 
                 style:{
                     "color": nations[nation].color,
                 },
             })
+            
             if (nation == viewNation) {
                 addNonGroupLayers(layer, drawnItems, nation, claim);
             } else {
                 layer.data = {name:claim.user, nation:nation, original:layer, label:claim.label}
-                
+                layer.on("click", async function(e) {
+                    if (e.target.data.label) {e.target._tooltip.toggle()}
+                })
                 if (claim.label && !location.search.includes("instant")) {layer.bindTooltip(`<b>${claim.label}</b> - ${claim.user}, ${nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
                 } else {layer.on('mouseover', customTip);}
 
@@ -275,21 +328,21 @@ async function load_claims() {
 }
 load_claims()
 
-// Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
 function addNonGroupLayers(sourceLayer, targetGroup, nation, claim) {
     if (sourceLayer instanceof L.LayerGroup) {
       sourceLayer.eachLayer(function(layer) {
         layer.data = {name:claim.user, nation:nation, original:layer, label:claim.label}
-        
+        layer.on("click", async function(e) {
+            if (e.target.data.label) {e.target._tooltip.toggle()}
+        })
         
         if (claim.label) {
             layer.bindTooltip(`<b>${claim.label}</b> - ${claim.user}, ${nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
         } else {
             layer.on('mouseover', customTip);
         }
-        
-        layer.on("edit", async function(e) {
-            
+
+        async function edit(e) {
             edited_layers = []
 
             map.eachLayer(async function(layer){
@@ -310,7 +363,10 @@ function addNonGroupLayers(sourceLayer, targetGroup, nation, claim) {
                 }
             )
             
-        })
+        }
+        
+        layer.on("edit", edit)
+        layer.on("moveend", edit)
         addNonGroupLayers(layer, targetGroup);
       });
     } else {
@@ -319,4 +375,16 @@ function addNonGroupLayers(sourceLayer, targetGroup, nation, claim) {
   }
 map.addLayer(drawnItems);
 
-
+map_info = document.getElementById("map-info")
+map_info_text = document.getElementById("map-info-text")
+map_info_chevron = document.getElementById("map-info-chevron")
+map_info.onclick = async function() {
+    if (map_info_text.style.height == "50vh") {
+        map_info_text.style.height = "0"
+        map_info_chevron.style.transform = "rotate(0deg)"
+    } else {
+        map_info_text.style.height = "50vh"
+        map_info_chevron.style.transform = "rotate(180deg)"
+    }
+    
+}

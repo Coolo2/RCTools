@@ -40,7 +40,7 @@
     float:right;
     position:relative;
     overflow: hidden;
-    width:12vw;
+    width:15vw;
     font-size:17px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -57,4 +57,112 @@
     position: relative;
     border-radius:15px;
     box-shadow: 10px 10px 20px rgb(0, 0, 0, 0.2)
+}
+
+.editors {
+    width:60%;
+    margin-top:5px;
+    height:250px;
+    overflow-y:auto;
+    border:2px solid white
+}
+.editor {
+    width:calc(100% - 20px);
+    margin-left:10px;
+    background-color:rgb(255, 255, 255, 0.1);
+    margin-top:10px;
+    float:left;
+    cursor:pointer;
+    transition:background-color .1s, border-radius .1s;
+    position:relative;
+    border-radius:5px;
+}
+.editor:hover {
+    background-color:rgb(255, 255, 255, 0.5);
+    border-radius:2px;
+}
+.editor-image {
+    width:40px;
+    height:40px;
+    margin-left:10px;
+    margin-top:5px;
+    float:left;
+}
+.editor-name {
+    font-size:30px;
+    margin-top:10px;
+    margin-left:70px;
+}
+.editor-more {
+    margin-top:5px;
+    overflow-y:hidden;
+    height:0;
+    transition: .2s height;
+    margin-left:10px;
+}
+.editor-remove {
+    color:white;
+    position:absolute;
+    right:20px;
+    font-size:20px;
+    top:10px;
+    background-color:rgb(255, 0, 0, 0.2);
+    border-radius:2px;
+    width:30px;
+    height:30px;
+    padding:5px;
+    box-sizing: border-box;
+    padding-left:7px
+}
+.editor-remove:hover {
+    background-color:red;
+}
+
+.info {
+    border-top-left-radius: 10px;
+    border-left: 3px solid white;
+    border-top: 3px solid white;
+    background-color:#1a1d1f;
+    position:fixed;
+    right:0;
+    bottom:0;
+    z-index:10;
+    box-shadow: 0 0 10px rgb(0, 0, 0, 0.8);
+    cursor:pointer;
+    z-index:10;
+    transition: background-color .2s
+}
+.info-text {
+    color:white;
+    position:relative;
+    width:300px;
+    float:right;
+    height:50px;
+    border-bottom: 1px solid white;
+}
+.info-chevron {
+    position:relative;
+    float:right;
+    width:100px;
+    height:50px;
+    color:white;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white
+}
+#map-info-chevron {
+    top:15px;
+    left:42.5px;
+    position:absolute;
+    transition: transform .3s;
+}
+.info:hover {
+    background-color:rgb(100, 100, 100)
+}
+#map-info-text {
+    color:white;
+    position:relative;
+    margin-left:10px;
+    height:0;
+    width:380px;
+    transition: height .3s
 }

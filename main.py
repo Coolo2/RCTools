@@ -11,6 +11,10 @@ import urllib.parse
 import random 
 import datetime
 
+
+# TODO
+# Finish time: conversion and URLs
+
 def random_color():
     r = lambda: random.randint(0,255)
     return '#%02X%02X%02X' % (r(),r(),r())
@@ -57,6 +61,72 @@ async def _time():
 async def _map():
     return await quart.render_template("map.html")
 
+@app.route("/bot", methods=["GET"])
+async def _bot():
+    return await quart.render_template("bot.html")
+
+@app.route("/bot/invite")
+async def _bot_invite():
+    return quart.redirect(var.bot_invite)
+
+@app.route("/api/time")
+async def _api_time():
+    daysin = (datetime.datetime.now() - datetime.datetime(2022, 1, 1, 0, 0)).days
+    timehou = datetime.datetime.now().hour
+    timemin = datetime.datetime.now().minute
+    timesecond = datetime.datetime.now().second
+    timepass = daysin + timehou / 24 + timemin / 60 + timesecond / 60 / 60
+
+    rcyearex = timepass / 30.4375
+    rcyears = int(rcyearex)
+    rcmonthex = (rcyearex - int(rcyearex)) * 12
+    rcmonths = int(rcmonthex)
+    rcdayex = (rcmonthex - int(rcmonthex)) * 30.4375
+    rcdays = int(rcdayex)
+    rchourex = (rcdayex - int(rcdayex)) * 24
+    rchours = int(rchourex)
+    rcminuteex = (rchourex - int(rchourex)) * 60
+    rcminutes = int(rcminuteex)
+
+    date = datetime.datetime(rcyears, rcmonths+1, rcdays, rchours, rcminutes)
+    return {"time":date.isoformat()}
+
+@app.route("/api/time/convert")
+async def _api_time_convert():
+    if quart.request.args.get("rltime"):
+        daysin = (datetime.datetime.strptime(quart.request.args.get("rltime"), '%Y-%m-%d %H:%M:%S') - datetime.datetime(2022, 1, 1, 0, 0)).days
+        timehou = datetime.datetime.now().hour
+        timemin = datetime.datetime.now().minute
+        timesecond = datetime.datetime.now().second
+        timepass = daysin + timehou / 24 + timemin / 60 + timesecond / 60 / 60
+
+        rcyearex = timepass / 30.4375
+        rcyears = int(rcyearex)
+        rcmonthex = (rcyearex - int(rcyearex)) * 12
+        rcmonths = int(rcmonthex)
+        rcdayex = (rcmonthex - int(rcmonthex)) * 30.4375
+        rcdays = int(rcdayex)
+        rchourex = (rcdayex - int(rcdayex)) * 24
+        rchours = int(rchourex)
+        rcminuteex = (rchourex - int(rchourex)) * 60
+        rcminutes = int(rcminuteex)
+
+        date = datetime.datetime(rcyears, rcmonths+1, rcdays+1, rchours, rcminutes)
+        return {"time":date.isoformat()}
+    elif quart.request.args.get("rctime"):
+        YEAR = datetime.timedelta(days=365, hours=5, minutes=48, seconds=46)
+
+        year = int(quart.request.args.get("rctime").split("-")[0])
+        date = datetime.datetime.strptime("-".join(quart.request.args.get("rctime").split("-")[1:]), '%m-%d %H:%M:%S') 
+
+
+        delta = (year*YEAR + datetime.timedelta(days=((date.month-1)*30.4375) + (date.day-1), hours=date.hour, minutes=date.minute)) / 12
+        print(delta)
+        delta = delta - datetime.timedelta(hours=13, minutes=45)
+        rl_date = datetime.datetime(2022, 1, 1) + delta
+
+        return {"time":rl_date.isoformat()}
+
 @app.route("/api/remove_nation", methods=["GET"])
 async def _delete_nation():
     global dict_editors 
@@ -94,18 +164,16 @@ async def _remove_editor():
     if int(client.encryption.decode(code, PASSWORD)) not in ADMINS:
         return quart.jsonify({"error":"You do not have permission to use this"})
 
-    if not (id or name) or not nation:
-        return quart.jsonify({"errror":"id or nation not provided"})
-
-    if nation not in dict_editors:
-        return quart.jsonify({"error":"Nation doesn't exist"})
+    if not (id or name):
+        return quart.jsonify({"errror":"id or name not provided"})
     
     if not id:
-        for nation in dict_editors:
-            for id2, name2 in dict_editors[nation].items():
+        for _nation in dict_editors:
+            for id2, name2 in dict_editors[_nation].items():
                 if name == name2:
                     id = id2 
-    
+                    nation = _nation
+
     del dict_editors[nation][str(id)]
 
     
@@ -277,6 +345,9 @@ async def _oauth():
     return resp
 
 def get_claims() -> dict:
+    with open("editors.json") as f:
+        j = json.load(f)
+
     resp = {"nations":{}, "claims":{}}
     for name, nation in dict_editors.items():
         if "config" in nation:
@@ -284,6 +355,10 @@ def get_claims() -> dict:
     for nation in world.nations:
         resp["nations"][nation.name] = {"color":nation.color}
     resp["claims"] = dict_claims
+    resp["editors"] = {k:{k2:v2 for k2, v2 in v.items() if k2 != "config"} for k, v in dict_editors.items()}
+    for admin in ADMINS:
+        j.append(str(admin))
+    resp["global_editors"] = j
     return resp
 
 @app.route("/api/claims", methods=["PUT"])
@@ -296,7 +371,7 @@ async def _put_claim():
     data = await quart.request.json 
     nation = data["nation"]
 
-    if not user.admin and user.nation != "global" and user.nation != nation:
+    if not user.editor and user.nation != nation:
         return quart.jsonify({"error":"You do not have permission to perform this action"})
 
     if nation not in dict_claims:
@@ -323,6 +398,9 @@ async def _delete_claim():
 
     for feature in data["layer"]["features"]:
         for nation, claims in dict_claims.items():
+            if not user.editor and user.nation != nation:
+                continue
+
             removeIndexes = []
 
             for i, claim in enumerate(claims):
@@ -346,9 +424,9 @@ async def _edit_claims():
     data = await quart.request.json 
     nation = data["nation"]
 
-    if not user.admin and user.nation != "global" and user.nation != nation:
+    if not user.editor and user.nation != nation:
         return quart.jsonify({"error":"You do not have permission to perform this action"})
-
+    
     dict_claims[nation] = []
     for layer in data["layers"]:
         dict_claims[nation].append({
@@ -367,10 +445,16 @@ async def _edit_claims():
 async def _get_claims():
     return quart.jsonify(get_claims())
 
+
+
 @app.route("/map/image")
 async def _map_image():
-    await client.screenshot.screenshot()
 
+    return await quart.send_file("screenshot.png")
+
+@app.route("/map/image/refresh")
+async def _map_image_refresh():
+    await client.screenshot.screenshot()
     return await quart.send_file("screenshot.png")
 
 
@@ -386,7 +470,9 @@ async def startup():
     rulerearth = await client.requests.get_json("https://map.rulercraft.com/tiles/_markers_/marker_RulerEarth.json")
     world = client.rulerearth.World(rulerearth)
 
-    
+@app.after_serving
+async def after_serving():
+    await client.screenshot.screenshot()
     
 
 app.run(host="0.0.0.0", port=var.port, use_reloader=False)

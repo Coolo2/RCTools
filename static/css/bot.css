@@ -1,0 +1,46 @@
+
+h1 {
+    font-size:70px;
+    color:white;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-top:100px
+}
+p {
+    font-size:20px;
+    color:white;
+    font-weight:100;
+}
+h2 {
+    font-size:50px;
+    color:white;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+h3 {
+    font-size:30px;
+    color:white;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.image {
+    border-radius:5px;
+    box-shadow: 5px 5px 10px rgb(0, 0, 0, 0.5);
+    transition: width .25s, box-shadow .25s;
+    width:75%
+}
+.image:hover {
+    width: 80%;
+    box-shadow: 5px 5px 20px rgb(0, 0, 0, 1)
+}
+
+#content {
+    text-align: center;
+}

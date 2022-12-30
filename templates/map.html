@@ -21,23 +21,37 @@
             <a class="navbar-item navbar-logo" href="/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
             <a class="navbar-item" href="/time"><div class="all-center">Time</div></a>
             <a class="navbar-item" href="/map"><div class="all-center">Map</div></a>
+            <a class="navbar-item" href="/bot"><div class="all-center">Bot</div></a>
             <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right transition"></i></div></div>
         </div>
         <div class="edit noselect" id="edit">
-            <div class="edit-item" id="edit-button"><div class="all-center">Edit Map</div></div>
+            <div class="edit-item" id="edit-button"><div class="all-center">Edit</div></div>
             <div class="edit-item" id="edit-admin-button" style="display:none"><div class="all-center">Admin</div></div>
             <div id="edit-user" style="display:none"><div class="all-center" id="edit-user-info"></div></div>
             <a class="edit-item" href="/logout" style="width:50px;display:none" id="edit-logout"><div class="all-center"><i class="fa-solid fa-right-from-bracket"></i></div></a>
         </div>
         <div id="map"></div>
+        <div class="info" id="map-info">
+            <div class="info-text">
+                <div class="all-center">Map Info</div>
+            </div>
+            <div class="info-chevron">
+                <i class="fa-solid fa-chevron-up " id="map-info-chevron"></i>
+            </div>
+            <div id="map-info-text">
+                This is a map of nations' claimed regions. It is not neceserrily a representation of what they have claimed in-game, it shows regions which they desire and 
+                claim is theirs. The map is edited by individuals from each nation as well as global editors (who can edit for any nation).
+            </div>
+        </div>
 
         <div class="modal micromodal-slide noselect" id="modal-login" aria-hidden="true">
             <div class="modal__overlay" tabindex="-1" data-micromodal-close>
                 <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
-                    <div class="modal-title">Please Log In to continue</div>
-                    <div class="modal-text">Log-in through Discord (reccomended) or message Coolo2#5499 for a code</div>
+                    <div class="modal-title">Please log in to continue</div>
+                    <div class="modal-text">You can log in through two methods:</div>
                     <div class="modal-text">- - -</div>
-                    <div class="modal-text">Discord Login. You may still require authorisation to edit the map; message Coolo2#5499 on Discord to gain access</div>
+                    <div class="modal-subtitle">Discord Login</div>
+                    <div class="modal-text">If you are new, you may require authorisation to begin editing (Coolo2 is notified automatically). More info will be shown when you log in</div>
                     <div class="modal-text">
                         <a class="button" style="background-color:#5865F3;" href="/login">
                             <span>Login with</span> 
@@ -45,7 +59,8 @@
                         </a>
                     </div>
                     <div class="modal-text">- - -</div>
-                    <div class="modal-text">Code Login. You can also request a code to login with instead. Message Coolo2#5499 to get a code</div>
+                    <div class="modal-subtitle">Code Login</div>
+                    <div class="modal-text">You can message Coolo2#5499 for a code which can be used for login instead.</div>
                     <div class="modal-text">
                         <input class="input" placeholder="Enter code here..." id="login-code">
                     </div>
@@ -89,8 +104,10 @@
                     </div>
                     <div class="modal-text">
                         Add/move editor
-                        <form action="/api/add_editor">
-                            <input type="text" name="nation" class="input" placeholder="Nation name (exact)">
+                        <form autocomplete="off" action="/api/add_editor">
+                            <select class="button nations-select" name="nation">
+                                <option value="" disabled selected>Select a nation</option>
+                            </select>
                             <input type="text" name="name" class="input" placeholder="User Minecraft name">
                             <input type="text" name="id" class="input" placeholder="Discord ID (add only)">
                             <input type="submit" class="button" value="Submit">
@@ -98,16 +115,19 @@
                     </div>
                     <div class="modal-text">
                         Remove editor
-                        <form action="/api/remove_editor">
-                            <input type="text" name="name" class="input" placeholder="Editor Minecraft name">
-                            <input type="text" name="nation" class="input" placeholder="Nation name">
+                        <form autocomplete="off" action="/api/remove_editor">
+                            <select class="button editors-select" name="name">
+                                <option value="" disabled selected>Select an editor (can type)</option>
+                            </select>
                             <input type="submit" class="button" value="Submit">
                         </form> 
                     </div>
                     <div class="modal-text">
                         Delete Nation claims and Editors
                         <form action="/api/remove_nation">
-                            <input type="text" name="nation" class="input" placeholder="Nation name">
+                            <select class="button nations-select" name="nation">
+                                <option value="" disabled selected>Select a nation</option>
+                            </select>
                             <input type="submit" class="button" value="Submit">
                         </form> 
                     </div>
@@ -117,6 +137,18 @@
                         <a class="button" href="https://helperdata.glitch.me/view/rctools/editors.json">Editors</a>
                         <a class="button" href="https://helperdata.glitch.me/view/rctools/claims.json">Claims</a>
                     </div>
+                    <example id="admin-editor">
+                        <div class="editor" id="{name}" onclick="expandEditor(this)">
+                            <img class="editor-image" src="{image}" {onerror}>
+                            <div class="editor-name" style="color:(color)">{name}</div>
+                            <div class="editor-more" id="{name}-more">{description}</div>
+                            <a class="editor-remove" href="/api/remove_editor?name={name_uri}">
+                                <div aria-label="Remove Editor" data-balloon-pos="left"><i class="fa-solid fa-x"></i></div>
+                            </a>
+                        </div>
+                    </example>
+                    <div id="admin-editors" class="horizontal-center editors">
+                    </div>
                     
                 </div>
             </div>
@@ -125,11 +157,13 @@
             <div class="modal__overlay" tabindex="-1" data-micromodal-close>
                 <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
                     <div class="modal-title">Map Editor</div>
-                    <div class="modal-text">---</div>
+                    
                     <div class="modal-text" style="display:none" id="select-nations-wrapper">
+                        <div class="modal-text">---</div>
                         You are a verified map editor and therefore can edit the map as any nation!
-                        <select id="select-nations" class="button">
-                            Select a nation to view as
+                        <select id="select-nations" class="button nations-select" >
+                            
+                            
                         </select>
                     </div>
                     <div class="modal-text">---</div>
@@ -149,6 +183,17 @@
                         <img src="/static/images/edit_polygon.png" height="100px">
                         <br>
                         When placing or editing a shape, you click on the map where you want to add a point. Once you've added a point, you can drag it around to have it in the correct place you desire.
+                    </div>
+                    <div class="modal-text">---</div>
+                    <div class="modal-subtitle">Verified Map Editors</div>
+                    <example id="editor">
+                        <div class="editor" id="{name}" style="cursor:default">
+                            <img class="editor-image" src="{image}" {onerror}>
+                            <div class="editor-name" style="color:(color)">{name}</div>
+                            <div class="editor-more" style="height:50px">{description}</div>
+                        </div>
+                    </example>
+                    <div id="editors" class="horizontal-center editors">
                     </div>
                 </div>
             </div>

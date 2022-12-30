@@ -17,10 +17,12 @@
     </head>
     
     <body>
+        
         <div class="navbar noselect" id="navbar">
             <a class="navbar-item navbar-logo" href="/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
             <a class="navbar-item" href="/time"><div class="all-center">Time</div></a>
             <a class="navbar-item" href="/map"><div class="all-center">Map</div></a>
+            <a class="navbar-item" href="/bot"><div class="all-center">Bot</div></a>
             <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right transition"></i></div></div>
         </div>
         <input id="specific-date" class="specific-date" type="datetime-local" placeholder="Custom Time" >
@@ -46,6 +48,13 @@
         <div class="options">
             <input type="checkbox" id="show_seconds" checked><label for="show_seconds" class="noselect">Show Seconds</label>
         </div>
+        
+        <div class="bg" id="background-night-am" style="background-color:#00000c"></div>
+        <div class="bg" id="background-sunrise" style="transition: opacity 2s"></div>
+        <div class="bg" id="background-day"></div>
+        <div class="bg" id="background-sunset"></div>
+        <div class="bg" id="background-night-pm" style="background-color:#00000c"></div>
+        <div id="sun"></div>
     </body>
     <script src="/static/js/global.js"></script>
     <script src="/static/js/time.js"></script>

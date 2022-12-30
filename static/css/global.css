@@ -17,6 +17,8 @@ body {
     transition: filter .1s, border-radius .2s;
     font-size:20px;
     text-decoration: none;
+    position:relative
+    
 }
 .button:hover {
     filter:brightness(200%);
@@ -24,8 +26,12 @@ body {
 }
 .button-image {
     margin-left:10px;
-    
     height:20px;
+    
+}
+
+example {
+    display:none
 }
 
 .input {

@@ -55,6 +55,16 @@ Basic Modal Styles
     text-transform:uppercase;
     text-align: center;
 }
+.modal-subtitle {
+    font-size:25px;
+    font-weight:bold;
+    width:100%;
+    margin-top:10px;
+    margin-bottom:20px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    text-align: center;
+}
 .modal-text {
     width:calc(100% - 50px);
     margin-bottom:20px;
