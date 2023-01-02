@@ -64,3 +64,19 @@
     line-height: 25px;
     margin-bottom:50px;
 }
+.sources {
+    bottom:15px;
+    right:0;
+    position:absolute;
+
+}
+.source {
+    padding-right:15px;
+    float:right;
+    color:gray;
+    transition:color .2s;
+    cursor:pointer
+}
+.source:hover {
+    color:white
+}

@@ -10,6 +10,8 @@ months = ["January", "Febuary", "March", "April", "May", "June", "July", "August
 const day_length_milliseconds = 24 * 60 * 60 * 1000;
 const epoch = new Date(2022, 0, 1);
 
+// HTML elements
+
 input = document.getElementById("specific-date")
 time = document.getElementById("time")
 time_small = document.getElementById("time-small")
@@ -40,40 +42,9 @@ var rc_time_overwrite
 var rl_time_overwrite
 var start_rc_date
 
-updateTime = async function() {
-
-    
-    
-
-    if (rc_time_overwrite) {
-        var now = rl_time_overwrite;
-        
-        rc_date = rc_time_overwrite
-        
-    } else {
-        var now = new Date;
-        input.value = now.toISOString().substring(0,16);
-
-        if (!start_rc_date) {
-            startTime = new Date
-
-            r = await fetch("/api/time")
-            j = await r.json()
-            start_rc_date = new Date(j.time)
-            console.log(rc_date)
-        }
-
-        diff = (new Date().getTime() - startTime.getTime())
-        rc_date = new Date(start_rc_date.getTime() + diff*12*24 )
-    }
-
-    
-    
-    /*
-
+async function urlParams() {
     // Set custom RC time from URL arguments
-    if (URLParams.get("customDate") && !stopCustomURL) {
-        
+    if (URLParams.get("customDate")) {
 
         if (URLParams.get("year")) {
             url_year = URLParams.get("year")
@@ -90,33 +61,62 @@ updateTime = async function() {
         if (URLParams.get("minute")) {
             url_minute = URLParams.get("minute")
         } else {url_minute = rc_minutes}
-
-        overwriteRCTime = new Date(
+        
+        //http:localhost:8000/time?customDate=true&year=11&month=12&day=20&hour=19&minute=39
+        d = new Date(
             url_year,
             url_month-1,
             url_day,
             url_hour,
             url_minute
         )
-        overwriteRCTime.setFullYear(url_year)
+        d.setFullYear(url_year)
         stopCustomURL = true 
-        window.history.pushState(null, null, "/")
-    }
+        window.history.pushState(null, null, "/time")
 
-    // Set RC time if overwritten
-    if (overwriteRCTime) {
-        rc_years_floor = overwriteRCTime.getYear()+1900
-        rc_months_floor = overwriteRCTime.getMonth()
-        rc_days_floor = overwriteRCTime.getDate()-1
-        rc_hours_floor = overwriteRCTime.getHours()
-        rc_minutes_floor = overwriteRCTime.getMinutes()
-        rc_seconds_floor = overwriteRCTime.getSeconds()
+        clearInterval(i);
+
+        r = await fetch(`/api/time/convert?rctime=${encodeURIComponent(formatDate(d))}`)
+        j = await r.json()
 
         input.style.backgroundColor = "#36393F"
         rl_date.style.backgroundColor = "green"
-    } 
 
-    rc_date = new Date(rc_years_floor+1970, rc_months_floor, rc_days_floor+1, rc_hours_floor, rc_minutes_floor, rc_seconds_floor)*/
+        rc_time_overwrite = d
+        rl_time_overwrite = new Date(new Date(j.time).getTime() - new Date().getTimezoneOffset()*60000) 
+
+        input.value = rl_time_overwrite.toISOString().substring(0,16);
+        await updateTime()
+        
+    }
+}
+
+
+updateTime = async function() {
+
+    if (rc_time_overwrite) {
+        var now = rl_time_overwrite;
+        
+        rc_date = rc_time_overwrite
+        
+    } else {
+        var now = new Date;
+        input.value = now.toISOString().substring(0,16);
+
+        if (!start_rc_date) {
+            start_rc_date = "h"
+            startTime = new Date
+
+            r = await fetch("/api/time")
+            try{j = await r.json()} catch {clearInterval(i)}
+            start_rc_date = new Date(j.time)
+        }
+
+        diff = (new Date().getTime() - startTime.getTime())
+        rc_date = new Date(start_rc_date.getTime() + diff*12)
+    }
+
+    // Split RC time into vars
     
     rc_years_floor = rc_date.getYear()+1900
     rc_months_floor = rc_date.getMonth()
@@ -124,17 +124,10 @@ updateTime = async function() {
     rc_hours_floor = rc_date.getHours()
     rc_minutes_floor = rc_date.getMinutes()
     rc_seconds_floor = rc_date.getSeconds()
-    
-    // Change RL time if RC time is overwritten
-    /*if (overwriteRCTime) {
-        now = new Date(epoch.getTime() + rc_date.getTime()/12 - now.getTimezoneOffset()*60000)
-        if (now.getTimezoneOffset() % 180 == 0 || [-480, 480, -330].includes(now.getTimezoneOffset())) {
-            now = new Date(now.getTime() + 60*60*1000)
-        }
-    }*/
+
+    // Update the background graphic
 
     seconds_through_day = rc_date.getSeconds() + (rc_date.getMinutes() * 60) + (rc_date.getHours() * 3600)
-    console.log(seconds_through_day)
 
     alg = window.innerHeight - ( ((window.innerHeight*1.5/(86400-18000-25200)) * (seconds_through_day - 25200)) )
     if (alg < 0) {sunTop = (0-alg)-100} else {sunTop = alg}
@@ -149,11 +142,10 @@ updateTime = async function() {
     document.getElementById("background-day").style.opacity = (seconds_through_day - 25200) / 36000
     document.getElementById("background-sunset").style.opacity = (seconds_through_day - 61200) / 10000
     document.getElementById("background-night-pm").style.opacity = (seconds_through_day - 75000) / 10000
-    console.log((seconds_through_day - 61200) / 10000)
 
     sun.style.top = sunTop
 
-    // Update screen
+    // Update on-screen time
 
     time.innerHTML = `Year ${rc_years_floor}, Month ${rc_months_floor+1}, Day ${rc_days_floor+1}, Hour ${rc_hours_floor}, Minute ${rc_minutes_floor}`
     if (getSetting("show_seconds")) {
@@ -179,9 +171,11 @@ updateTime = async function() {
 }
 
 var i = setInterval(updateTime, updateOffset)
+urlParams()
 
 
 input.oninput = async function(e) {
+    // Inputted Real Life date to be converted to a RC date
     if (isNaN(e.target.valueAsNumber)) {
         rc_time_overwrite = null
         rc_time_overwrite = null
@@ -189,11 +183,11 @@ input.oninput = async function(e) {
         i = setInterval(updateTime, updateOffset)
     } else {
         clearInterval(i);
-        
-        d = new Date(e.target.valueAsNumber - new Date().getTimezoneOffset()*60000)
+        d = new Date(e.target.valueAsNumber + new Date().getTimezoneOffset()*60000)
 
         input.style.backgroundColor = "green"
         rl_date.style.backgroundColor = "#36393F"
+        
         r = await fetch(`/api/time/convert?rltime=${encodeURIComponent(formatDate(d))}`)
         j = await r.json()
         
@@ -204,6 +198,7 @@ input.oninput = async function(e) {
 } 
 
 rl_date.oninput = async function(e) {
+    // Inputted RC date to be converted to a Real Life date
     if (isNaN(e.target.valueAsNumber)) {
         rc_time_overwrite = null
         rc_time_overwrite = null
@@ -222,7 +217,7 @@ rl_date.oninput = async function(e) {
         rl_date.style.backgroundColor = "green"
 
         rc_time_overwrite = d
-        rl_time_overwrite = new Date(j.time)
+        rl_time_overwrite = new Date(new Date(j.time).getTime() - new Date().getTimezoneOffset()*60000) 
 
         input.value = rl_time_overwrite.toISOString().substring(0,16);
         await updateTime()
@@ -233,6 +228,7 @@ function copyText(text) {var input = document.createElement('input');input.setAt
     document.body.appendChild(input);input.select();var result = document.execCommand('copy');document.body.removeChild(input);return result;}
 
 copy.onclick = async function(e) {
+    // RC time copy button
     copy.style.backgroundColor = "#21822c"
 
     copyText(time_small.innerHTML)
@@ -248,9 +244,10 @@ copy.onclick = async function(e) {
 }
 
 geturl.onclick = async function(e) {
+    // RC copy url button
     geturl.style.backgroundColor = "#21822c"
 
-    copyText(`${location.href}?customDate=true&year=${rc_years_floor}&month=${rc_months_floor+1}&day=${rc_days_floor}&hour=${rc_hours_floor}&minute=${rc_minutes_floor}`)
+    copyText(`${location.href}?customDate=true&year=${rc_years_floor}&month=${rc_months_floor+1}&day=${rc_days_floor+1}&hour=${rc_hours_floor}&minute=${rc_minutes_floor}`)
 
     setTimeout(function () {
         geturl.style.transition = "background-color 1s"
@@ -263,6 +260,7 @@ geturl.onclick = async function(e) {
 }
 
 copy_rl.onclick = async function(e) {
+    // Real Life time copy
     copy_rl.style.backgroundColor = "#21822c"
 
     copyText(time_small_rl.innerHTML)
@@ -278,6 +276,8 @@ copy_rl.onclick = async function(e) {
 }
 
 show_seconds.oninput = async function(e) {
+    // Show seconds checkbox 
+
     if (!localStorage.getItem("options")) {
         localStorage.setItem("options", JSON.stringify({}))
     }
@@ -288,7 +288,7 @@ show_seconds.oninput = async function(e) {
 
 show_seconds.checked = getSetting("show_seconds")
 resize = async function() {
-    console.log(typeof window.innerWidth)
+    // Window size handler
 
     if (window.innerWidth > 1000) {
         time.style.fontSize = window.innerHeight / 15.4

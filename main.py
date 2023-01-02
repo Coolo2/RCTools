@@ -11,9 +11,7 @@ import urllib.parse
 import random 
 import datetime
 
-
 # TODO
-# Finish time: conversion and URLs
 
 def random_color():
     r = lambda: random.randint(0,255)
@@ -71,13 +69,14 @@ async def _bot_invite():
 
 @app.route("/api/time")
 async def _api_time():
-    daysin = (datetime.datetime.now() - datetime.datetime(2022, 1, 1, 0, 0)).days
-    timehou = datetime.datetime.now().hour
-    timemin = datetime.datetime.now().minute
-    timesecond = datetime.datetime.now().second
-    timepass = daysin + timehou / 24 + timemin / 60 + timesecond / 60 / 60
+    t = datetime.datetime.now()
+    daysin = (t - datetime.datetime(2022, 1, 1, 0, 0)).days 
+    timehou = t.hour
+    timemin = t.minute
+    timesecond = t.second
+    days_in = daysin + timehou / 24 + timemin / 60 / 24 + timesecond / 60 / 60 / 24
 
-    rcyearex = timepass / 30.4375
+    rcyearex = days_in / 30.4375
     rcyears = int(rcyearex)
     rcmonthex = (rcyearex - int(rcyearex)) * 12
     rcmonths = int(rcmonthex)
@@ -88,19 +87,20 @@ async def _api_time():
     rcminuteex = (rchourex - int(rchourex)) * 60
     rcminutes = int(rcminuteex)
 
-    date = datetime.datetime(rcyears, rcmonths+1, rcdays, rchours, rcminutes)
-    return {"time":date.isoformat()}
+    return {"time":f"{rcyears:0>4}-{rcmonths+1:0>2}-{rcdays+1:0>2}T{rchours:0>2}:{rcminutes:0>2}:00"}
 
 @app.route("/api/time/convert")
 async def _api_time_convert():
     if quart.request.args.get("rltime"):
-        daysin = (datetime.datetime.strptime(quart.request.args.get("rltime"), '%Y-%m-%d %H:%M:%S') - datetime.datetime(2022, 1, 1, 0, 0)).days
-        timehou = datetime.datetime.now().hour
-        timemin = datetime.datetime.now().minute
-        timesecond = datetime.datetime.now().second
-        timepass = daysin + timehou / 24 + timemin / 60 + timesecond / 60 / 60
+        t = datetime.datetime.strptime(quart.request.args.get("rltime"), '%Y-%m-%d %H:%M:%S')
 
-        rcyearex = timepass / 30.4375
+        daysin = (t - datetime.datetime(2022, 1, 1, 0, 0)).days 
+        timehou = t.hour
+        timemin = t.minute
+        timesecond = t.second
+        days_in = daysin + timehou / 24 + timemin / 60 / 24 + timesecond / 60 / 60 / 24
+
+        rcyearex = days_in / 30.4375
         rcyears = int(rcyearex)
         rcmonthex = (rcyearex - int(rcyearex)) * 12
         rcmonths = int(rcmonthex)
@@ -111,19 +111,16 @@ async def _api_time_convert():
         rcminuteex = (rchourex - int(rchourex)) * 60
         rcminutes = int(rcminuteex)
 
-        date = datetime.datetime(rcyears, rcmonths+1, rcdays+1, rchours, rcminutes)
-        return {"time":date.isoformat()}
+        return {"time":f"{rcyears:0>4}-{rcmonths+1:0>2}-{rcdays+1:0>2}T{rchours:0>2}:{rcminutes:0>2}:00"}
     elif quart.request.args.get("rctime"):
         YEAR = datetime.timedelta(days=365, hours=5, minutes=48, seconds=46)
 
         year = int(quart.request.args.get("rctime").split("-")[0])
         date = datetime.datetime.strptime("-".join(quart.request.args.get("rctime").split("-")[1:]), '%m-%d %H:%M:%S') 
 
-
         delta = (year*YEAR + datetime.timedelta(days=((date.month-1)*30.4375) + (date.day-1), hours=date.hour, minutes=date.minute)) / 12
-        print(delta)
-        delta = delta - datetime.timedelta(hours=13, minutes=45)
-        rl_date = datetime.datetime(2022, 1, 1) + delta
+        delta = delta
+        rl_date = datetime.datetime(2022, 1, 1) + delta + datetime.timedelta(minutes=9)
 
         return {"time":rl_date.isoformat()}
 
