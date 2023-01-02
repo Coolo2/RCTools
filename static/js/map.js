@@ -28,21 +28,23 @@ login_code.oninput = async function() {
         window.open(window.location + "?login", "_self")
     }
 }
-// dont remove
-osmUrl = 'http://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.jpg'
-var map = L.map('map', {}).setView([51.505, -0.09], 13);
+
+osmUrl = '/static/images/tiles/{z}_{x}_{y}.jpg'
+var map = L.map('map', {})
+
 L.tileLayer(osmUrl, {
     maxZoom: 6,
-    noWrap: true
+    noWrap: true,
+    maxNativeZoom:5
 }).addTo(map);
 
 if (location.search.includes("instant")) {
-    map.setView([40, 0], 2);
+    map.setView([10, 0], 4);
     document.querySelector(".edit").style.display = "none"
     document.querySelector(".navbar").style.display = "none"
     map.zoomControl.remove()
 } else {
-    map.setView([40, 0], 4);
+    map.setView([10, 0], 4);
 }
 
 
