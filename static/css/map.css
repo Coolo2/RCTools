@@ -6,7 +6,7 @@
     width:100%;
     z-index:0
 }
-.leaflet-control-zoom { position: absolute; top: 55px }
+.leaflet-control-zoom { position: absolute; top: 55px; }
 
 .edit {
     border-bottom-left-radius: 10px;

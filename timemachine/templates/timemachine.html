@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <title>RCTools - RulerCraft Time</title>
+        
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="RCTools - Time Machine" />
+        <meta property="og:description" content="View the RulerCraft map through time. - A part of RCTools by Coolo2" />
+        <meta property="og:image" content="https://external-preview.redd.it/gt6ZIMAMbOHmxl1Yu6DYoMQVFFzRlML0bayiDcWhU0c.jpg?auto=webp&s=c15f25bd1d78d842136aa49afa080446b167abca" />
+        <meta name="theme-color" content="#6F01FF">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
+
+        <link rel="stylesheet" href="https://rctools.coolo2.repl.co/static/css/global.css">
+        <link rel="stylesheet" href="https://rctools.coolo2.repl.co/static/css/timemachine.css">
+        
+    </head>
+    
+    <body>
+        
+        <div class="navbar noselect" id="navbar">
+            <a class="navbar-item navbar-logo" href="https://rctools.coolo2.repl.co/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
+            <a class="navbar-item" href="https://rctools.coolo2.repl.co/time"><div class="all-center">Time</div></a>
+            <a class="navbar-item" href="https://rctools.coolo2.repl.co/map"><div class="all-center">Map</div></a>
+            <a class="navbar-item" href="https://rctools.coolo2.repl.co/bot"><div class="all-center">Bot</div></a>
+            <a class="navbar-item" href="/"><div class="all-center">Time Machine</div></a>
+            <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right transition"></i></div></div>
+        </div>
+
+        <h1 id="title">RulerCraft Time Machine<p>Click on a render below and view the RulerCraft map through history</p></h1>
+        
+
+        <example id="selector-example-full">
+            <div class="info-box noselect" %style% data-tilt data-tilt-axis="x" openNavbar onclick="openMap('%url%', '%date%', '%type%')">
+                <div class="info-title">Render: %date% (%daysago% days ago)</div>
+            </div>
+        </example>
+        <example id="selector-example-partial">
+            <div class="info-box small-box noselect" data-tilt data-tilt-axis="x" openNavbar onclick="openMap('%url%', '%date%', '%type%')">
+                <div class="info-description">Partial Render: %date% (%hoursago% hours ago)</div>
+            </div>
+        </example>
+        
+        <div class="info-container" id="selector">
+        </div>
+
+        <iframe id="backup-frame" style="display:none"></iframe>
+        <div id="close-frame" data-balloon-visible aria-label="Close Map" data-balloon-pos="left" style="display:none"><div class="all-center">x</div></div>
+        <div id="frame-info" style="display:none">Render: %date% (%daysago% days ago) </div>
+        <div class="info-top-right">
+            <div class="info-check noselect"><input type="checkbox" id="partial-toggle"><label for="partial-toggle">Hide Partial Renders</label></div>
+            <p>Full renders show the entire map state on the day. Partial renders only save town claim information. They use the nearest full render for map images (builds)</p>
+        </div>
+    </body>
+    <script src="https://rctools.coolo2.repl.co/static/js/global.js"></script>
+    <script src="https://rctools.coolo2.repl.co/static/js/timemachine.js"></script>
+    
+</html>

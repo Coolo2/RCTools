@@ -12,3 +12,17 @@ document.onclick = async function(e) {
         }, 500)
     }
 }
+
+async function resize() {
+    if (window.innerWidth < 1200) {
+        document.querySelectorAll(".info-box").forEach(element => {
+            element.style.width = "80%"
+        })
+    } else {
+        document.querySelectorAll(".info-box").forEach(element => {
+            element.style.width = "calc(33% - 50px)"
+        })
+    }
+}
+resize()
+window.onresize = resize

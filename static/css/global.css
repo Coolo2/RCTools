@@ -52,7 +52,8 @@ example {
     background-color:#1a1d1f;
     position:fixed;
     z-index:10;
-    box-shadow: 0 0 10px rgb(0, 0, 0, 0.8)
+    box-shadow: 0 0 10px rgb(0, 0, 0, 0.8);
+    font-size:20px
 }
 .navbar-item {
     height:100%;

@@ -1,0 +1,148 @@
+h1 {
+    font-size:70px;
+    color:white;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-top:100px
+}
+p {
+    font-size:20px;
+    color:white;
+    font-weight:100;
+}
+h2 {
+    font-size:50px;
+    color:white;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+h3 {
+    font-size:30px;
+    color:white;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.info-container {
+    position:absolute;
+    width:80%;
+    left:10%;
+    top:300px;
+}
+.info-box {
+    float:left;
+    width:100%;
+    background-color:#1a1d1f;
+    border:2px solid white;
+    border-radius:5px;
+    color:white;
+    box-sizing: border-box;
+    padding:15px;
+    position:relative;
+    cursor:pointer;
+    transition:filter .5s, background-size .5s, box-shadow .5s, transform .1s;
+    text-decoration: none;
+    box-shadow: 10px 10px 15px black;
+    margin-bottom:50px
+}
+.info-box:hover {
+    filter:brightness(150%);
+    background-size:190%;
+    box-shadow: 10px 10px 25px black;
+    
+}
+.info-title {
+    font-weight:500;
+    margin-top:25px;
+    font-size:25px;
+    text-transform:uppercase;
+    letter-spacing: 10px;
+    height:60px;
+    margin-left:20px;
+    width:100%;
+    text-align: center;
+}
+.info-description {
+    width:100%;
+    text-align: center;
+    line-height: 25px;
+}
+#title {
+    position:absolute;
+    left:20px;
+}
+
+#backup-frame {
+    width:99%;
+    height:99%;
+    z-index:50;
+    position:fixed;
+    top:0;
+    left:0
+}
+#close-frame {
+    background-color: #222222;
+    position:fixed;
+    bottom:25px;
+    right:50px;
+    border-radius:3px;
+    width:100px;
+    height:100px;
+    color:white;
+    z-index:51;
+    font-size:50px;
+    cursor:pointer;
+    box-shadow:2px 2px 1px black;
+    transition:filter .3s
+}
+#close-frame:hover {
+    filter:brightness(150%)
+}
+
+#frame-info {
+    background-color: #222222;
+    position:fixed;
+    bottom:75px;
+    left:10px;
+    border-radius:3px;
+    width:300px;
+    height:50px;
+    color:white;
+    z-index:51;
+    font-size:20px;
+    box-shadow:2px 2px 1px black;
+    padding:5px;
+    text-transform: capitalize;
+}
+
+.small-box {
+    width:51%;
+    left:25%
+}
+
+.info-top-right {
+    position:absolute;
+    top:10px;
+    right:10px;
+    height:250px;
+    width:35vw;
+}
+
+.info-check {
+    position:absolute;
+    right:0;
+    color:white
+}
+
+.info-progress {
+    height:100%;
+    width:0;
+    position:absolute;
+    left:0;
+    top:0;
+}

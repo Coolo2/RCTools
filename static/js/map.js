@@ -18,6 +18,8 @@ login_code = document.getElementById("login-code")
 select_nations = document.getElementById("select-nations")
 nations_select_class = document.querySelectorAll(".nations-select")
 editors_select_class = document.querySelectorAll(".editors-select")
+non_world_nations_select = document.querySelectorAll(".non-world-nation-select")
+world_nations_select = document.querySelectorAll(".world-nation-select")
 
 login_code.oninput = async function() {
     r = await fetch(`/api/auth?code=${login_code.value}`)
@@ -29,25 +31,25 @@ login_code.oninput = async function() {
     }
 }
 
-osmUrl = '/static/images/tiles/{z}_{x}_{y}.jpg'
+osmUrl = 'https://raw.githubusercontent.com/Coolo22/RCTools/main/static/images/tiles/{z}_{x}_{y}.jpg'
 var map = L.map('map', {})
 
 L.tileLayer(osmUrl, {
-    maxZoom: 6,
+    maxZoom: 7,
     noWrap: true,
-    maxNativeZoom:5
+    maxNativeZoom:5,
+    minZoom: 3
 }).addTo(map);
 
 if (location.search.includes("instant")) {
     map.setView([10, 0], 4);
     document.querySelector(".edit").style.display = "none"
     document.querySelector(".navbar").style.display = "none"
+    document.querySelector(".info").style.display = "none"
     map.zoomControl.remove()
 } else {
     map.setView([10, 0], 4);
 }
-
-
 
 // Draw
 var drawnItems = new L.FeatureGroup();
@@ -59,26 +61,6 @@ async function auth() {
     r = await fetch("/api/auth")
     user = await r.json()
 
-    if (!viewNation) {
-        viewNation = user.nation
-        viewNationColor = user.config.color
-    }
-
-    urlParams = new URLSearchParams(window.location.search);
-        for (item of urlParams) {
-            if (item[0] == "adminCode") {
-                document.getElementById("adminCode").innerText = item[1]
-            }
-            if (user.editor) {
-                if (item[0] == "as") {
-                    viewNation = item[1]
-                }
-                if (item[0] == "color") {
-                    viewNationColor = "#" + item[1]
-                }
-            }
-    }
-    
     if (location.search.includes("admin") && user.admin) {
         MicroModal.show('modal-admin'); // [1]
         window.history.pushState("","", "/map");
@@ -86,9 +68,32 @@ async function auth() {
     if (user.id) {
         document.getElementById("edit-logout").style.display = "block"
     }
+
+    if (!viewNation && user.config) {
+        viewNation = user.nation
+        viewNationColor = user.config.color
+    }
+
     if (user.id && viewNation) {
+        
+        urlParams = new URLSearchParams(window.location.search);
+            for (item of urlParams) {
+                if (item[0] == "adminCode") {
+                    document.getElementById("adminCode").innerText = item[1]
+                }
+                if (user.global) {
+                    if (item[0] == "as") {
+                        viewNation = item[1]
+                    }
+                    if (item[0] == "color") {
+                        viewNationColor = "#" + item[1]
+                    }
+                }
+        }
+
         document.getElementById("edit-user").style.display = "block"
         document.getElementById("edit-user-info").innerText = `${user.name} - ${viewNation}`
+        
 
         if (drawControl) {
             map.removeControl(drawControl);
@@ -111,11 +116,13 @@ async function auth() {
                     }
                 }
             },
-            position: 'bottomleft'
+            position: 'bottomleft',
+            
         });
         map.addControl(drawControl);
     }
-    if (user.editor) {
+    console.log(user)
+    if (user.global) {
         document.getElementById("select-nations-wrapper").style.display = "block"
     }
     if (user.admin) {
@@ -140,9 +147,15 @@ open_button = async function() {
     }
 }
 
-if (location.search.includes("login")) {
+
+if (location.search.includes("loginerror")) {
+    MicroModal.show('modal-loginerror');
     window.history.pushState("","", "/map");
-    open_button()
+} else {
+    if (location.search.includes("login")) {
+        window.history.pushState("","", "/map");
+        open_button()
+    }
 }
 
 edit_button.onclick = open_button
@@ -152,7 +165,12 @@ edit_admin_button.onclick = async function() {
 
 function customTip() {
     this.unbindTooltip();
-    if(!this.isPopupOpen()) this.bindTooltip(`<b>${this.data.nation}</b> - added by <i>${this.data.name}</i>`).openTooltip();
+    if(!this.isPopupOpen()) this.bindTooltip(`<b>${this.properties.nation}</b> - added by <i>${this.properties.name}</i>`).openTooltip();
+}
+function customTipLabel() {
+    this.unbindTooltip();
+    if(!this.isPopupOpen()) this.bindTooltip(`<b>${this.properties.label}</b> - ${this.properties.name}, ${this.properties.nation}`).openTooltip();
+    
 }
 
 var markerLayer
@@ -161,12 +179,14 @@ var markerLayer
 document.getElementById("submittext").onclick = async function(e) {
     markerLayer.bindTooltip(`<b>${document.getElementById("text").value}</b> - ${user.name}, ${viewNation}`, {permanent: true, className: "my-label", offset: [0, 0] });
     
-    markerLayer.data = user
+    markerLayer.properties = user
+    j = markerLayer.toGeoJSON()
+    j.properties = markerLayer.properties 
 
     r = await fetch("/api/claims", 
         {
             method:"PUT", 
-            body:JSON.stringify({nation:viewNation, user:user.id, layer:markerLayer.toGeoJSON(), label:document.getElementById("text").value}),
+            body:JSON.stringify({nation:viewNation, user:user.id, layer:j, label:document.getElementById("text").value}),
             headers: {"Content-Type":"application/json"}
         }
     )
@@ -191,29 +211,42 @@ map.on(L.Draw.Event.CREATED, async function (event) {
 
     drawnItems.addLayer(layer);
 
-    layer.data = user
-    layer.data.nation = viewNation
-    layer.data.config.color = viewNationColor
+    layer.properties = user
+    layer.properties.nation = viewNation
+    layer.properties.config.color = viewNationColor
     layer.on('mouseover', customTip);
+
+    j = layer.toGeoJSON()
+    j.properties = layer.properties
 
     r = await fetch("/api/claims", 
         {
             method:"PUT", 
-            body:JSON.stringify({nation:viewNation, user:user.id, layer:layer.toGeoJSON()}),
+            body:JSON.stringify({nation:viewNation, user:user.id, layer:j}),
             headers: {"Content-Type":"application/json"}
         }
     )
 });
 
 map.on(L.Draw.Event.DELETED, async function (e) {
+
+    j = e.layers.toGeoJSON()
+    j.features = []
+
     e.layers.eachLayer(layer => {
+        gj = layer.toGeoJSON()
+        delete layer.properties.original
+        gj.properties = layer.properties
+
+        j.features.push(gj)
+
         map.removeLayer(layer);
     });
     
     r = await fetch("/api/claims", 
         {
             method:"DELETE", 
-            body:JSON.stringify({layer:e.layers.toGeoJSON()}),
+            body:JSON.stringify({layer:j}),
             headers: {"Content-Type":"application/json"}
         }
     )
@@ -266,18 +299,39 @@ async function load_claims() {
             element.innerHTML += `<option value="${nation}" style="color:${nations[nation].color}">${nation}</option>`
         }
     }
+    for (element of non_world_nations_select) {
+        for (nation in nations) {
+            if (!nations[nation].world) {
+                element.innerHTML += `<option value="${nation}" style="color:${nations[nation].color}">${nation}</option>`
+            }
+        }
+    }
+    for (element of world_nations_select) {
+        for (nation in nations) {
+            if (nations[nation].world) {
+                element.innerHTML += `<option value="${nation}" style="color:${nations[nation].color}">${nation}</option>`
+            }
+        }
+    }
     select_nations.value = viewNation
     
     for (nation in d.editors) {
         for (editor in d.editors[nation]) {
+            if (!nations[nation]) {
+                color = "#000000"
+            } else {
+                color = nations[nation].color
+            }
+
             for (element of editors_select_class) {
-                element.innerHTML += `<option value="${d.editors[nation][editor]}" style="color:${nations[nation].color}">${d.editors[nation][editor]} (${nation})</option>`
+                element.innerHTML += `<option value="${d.editors[nation][editor]}" style="color:${color}">${d.editors[nation][editor]} (${nation})</option>`
             }
 
             examples = [document.getElementById("editor").innerHTML, document.getElementById("admin-editor").innerHTML]
 
             counter = 0
             for (example of examples) {
+                
                 example = example.split("{name}").join(d.editors[nation][editor])
                 example = example.replace("{image}", `https://minotar.net/avatar/${d.editors[nation][editor]}`)
                 example = example.replace("{nation}", nation)
@@ -288,14 +342,16 @@ async function load_claims() {
                     example = example.replace("(color)", "white")
                     example = example.replace("{description}", `${d.editors[nation][editor]} is a global editor. They originate from ${nation}`)
                 } else {
-                    example = example.replace("(color)", nations[nation].color)
+                    example = example.replace("(color)", color)
                     example = example.replace("{description}", `${d.editors[nation][editor]} is an editor for ${nation}`)
                 }
                 examples[counter] = example
                 counter += 1;
             }
+            if (nation != "waiting") {
+                document.getElementById("editors").innerHTML += examples[0]
+            }
             
-            document.getElementById("editors").innerHTML += examples[0]
             document.getElementById("admin-editors").innerHTML += examples[1]
         }
         
@@ -306,7 +362,6 @@ async function load_claims() {
 
         for (claim of nation_claims) {
             
-            
             layer = L.geoJSON(claim.layer, { 
                 style:{
                     "color": nations[nation].color,
@@ -316,11 +371,17 @@ async function load_claims() {
             if (nation == viewNation) {
                 addNonGroupLayers(layer, drawnItems, nation, claim);
             } else {
-                layer.data = {name:claim.user, nation:nation, original:layer, label:claim.label}
+                layer.properties = {name:claim.layer.properties.name, nation:nation, original:layer, label:claim.label}
                 layer.on("click", async function(e) {
-                    if (e.target.data.label) {e.target._tooltip.toggle()}
+                    if (e.target.properties.label) {
+                        e.target.off("mouseover")
+                        e.target.unbindTooltip();
+                        e.target.bindTooltip(`<b>${e.target.properties.label}</b> - ${e.target.properties.name}, ${e.target.properties.nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
+                        
+                        //
+                    }
                 })
-                if (claim.label && !location.search.includes("instant")) {layer.bindTooltip(`<b>${claim.label}</b> - ${claim.user}, ${nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
+                if (claim.label) {layer.on("mouseover", customTipLabel)
                 } else {layer.on('mouseover', customTip);}
 
                 layer.addTo(map)
@@ -331,15 +392,23 @@ async function load_claims() {
 load_claims()
 
 function addNonGroupLayers(sourceLayer, targetGroup, nation, claim) {
+    
     if (sourceLayer instanceof L.LayerGroup) {
       sourceLayer.eachLayer(function(layer) {
-        layer.data = {name:claim.user, nation:nation, original:layer, label:claim.label}
+        layer.properties = {name:claim.layer.properties.name, nation:nation, original:layer, label:claim.label}
         layer.on("click", async function(e) {
-            if (e.target.data.label) {e.target._tooltip.toggle()}
+            if (e.target.properties.label) {
+                console.log("h")
+                e.target.off("mouseover")
+                e.target.unbindTooltip();
+                e.target.bindTooltip(`<b>${e.target.properties.label}</b> - ${e.target.properties.name}, ${e.target.properties.nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
+                e.target.properties.permanent = true
+                //
+            }
         })
-        
         if (claim.label) {
-            layer.bindTooltip(`<b>${claim.label}</b> - ${claim.user}, ${nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
+            layer.on('mouseover', customTipLabel);
+            //layer.bindTooltip(`<b>${claim.label}</b> - ${claim.layer.properties.name}, ${nation}`, {permanent: true, className: "my-label", offset: [0, 0] });
         } else {
             layer.on('mouseover', customTip);
         }
@@ -348,10 +417,12 @@ function addNonGroupLayers(sourceLayer, targetGroup, nation, claim) {
             edited_layers = []
 
             map.eachLayer(async function(layer){
-                if (osmUrl != layer._url && layer.data){
-                    if (layer.data.nation == e.target.data.nation) {
+                if (osmUrl != layer._url && layer.properties){
+                    if (layer.properties.nation == e.target.properties.nation) {
                         d = layer.toGeoJSON()
-                        d.label = layer.data.label
+                        d.label = layer.properties.label
+                        delete layer.properties.original
+                        d.properties = layer.properties
 
                         edited_layers.push(d)
                     }
@@ -360,7 +431,7 @@ function addNonGroupLayers(sourceLayer, targetGroup, nation, claim) {
             await fetch("/api/claims", 
                 {
                     method:"PATCH", 
-                    body:JSON.stringify({nation:e.target.data.nation, layers:edited_layers}),
+                    body:JSON.stringify({nation:e.target.properties.nation, layers:edited_layers}),
                     headers: {"Content-Type":"application/json"}
                 }
             )

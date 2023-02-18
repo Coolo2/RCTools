@@ -10,6 +10,8 @@ import discordoauth
 import urllib.parse
 import random 
 import datetime
+import subprocess
+import typing
 
 # TODO
 
@@ -21,9 +23,12 @@ def random_color():
 PASSWORD = os.getenv("encryption_password")
 GETCODE_WEBHOOK = os.getenv("getcode_webhook")
 ACCESSREQUESTS_WEBHOOK = os.getenv("accessrequests_webhook")
+ERRORS_WEBHOOK = os.getenv("errors_webhook")
 OAUTH_CLIENTID = os.getenv("oauth_clientid")
 OAUTH_CLIENTSECRET = os.getenv("oauth_clientsecret")
 DATABASE_KEY = os.getenv("database_key")
+file_server_url = os.getenv("file_server_url")
+file_server_port = os.getenv("file_server_port")
 
 MAINID = 368071242189897728
 
@@ -38,6 +43,8 @@ dict_editors = {}
 # Dict containing the claims for every naiton.
 #{nation:[ {"created":23794, "poly":[[0, 0], [0, 0]]} ]}
 dict_claims = {}
+
+strtime = "%d_%m_%y"
 
 app = quart.Quart(__name__)
 oauth = discordoauth.Client(OAUTH_CLIENTID, OAUTH_CLIENTSECRET)
@@ -62,6 +69,10 @@ async def _map():
 @app.route("/bot", methods=["GET"])
 async def _bot():
     return await quart.render_template("bot.html")
+
+@app.route("/timemachine")
+async def _timemachine():
+    return quart.redirect(file_server_url + ":" + file_server_port)
 
 @app.route("/bot/invite")
 async def _bot_invite():
@@ -149,6 +160,37 @@ async def _delete_nation():
 
     return quart.redirect("/map?admin")
 
+@app.route("/api/move_nation", methods=["GET"])
+async def _move_nation():
+    global dict_editors 
+
+    old_nation = quart.request.args.get("old_nation")
+    new_nation = quart.request.args.get("new_nation")
+    code = quart.request.args.get("code") or (urllib.parse.unquote(quart.request.cookies.get("code")) if quart.request.cookies.get("code") else None) 
+
+    if int(client.encryption.decode(code, PASSWORD)) not in ADMINS:
+        return quart.jsonify({"error":"You do not have permission to use this"})
+
+    if not old_nation:
+        return quart.jsonify({"errror":"old nation not provided"})
+    if not new_nation:
+        return quart.jsonify({"errror":"new nation not provided"})
+
+    if old_nation not in dict_editors:
+        return quart.jsonify({"error":"Nation doesn't exist"})
+    
+    dict_claims[new_nation] = dict_claims[old_nation]
+    dict_editors[new_nation] = dict_editors[old_nation]
+
+    del dict_editors[old_nation]
+    if old_nation in dict_claims:
+        del dict_claims[old_nation]
+    
+    await client.requests.post_json(f"https://helperdata.glitch.me/save{DATABASE_KEY}/rctools/editors.json", {'data':json.dumps(dict_editors)})
+    await client.requests.post_json(f"https://helperdata.glitch.me/save{DATABASE_KEY}/rctools/claims.json", {'data':json.dumps(dict_claims)})
+
+    return quart.redirect("/map?admin")
+
 @app.route("/api/remove_editor", methods=["GET"])
 async def _remove_editor():
     global dict_editors 
@@ -196,6 +238,8 @@ async def _add_editor():
     code = quart.request.args.get("code") or (urllib.parse.unquote(quart.request.cookies.get("code")) if quart.request.cookies.get("code") else None) 
     name = quart.request.args.get("name")
 
+    adding = True if id else False
+
     if not id:
         for editors in dict_editors.values():
             for i, n in editors.items():
@@ -213,8 +257,9 @@ async def _add_editor():
     
     code = urllib.parse.quote(client.encryption.encode(str(id), PASSWORD).decode("utf-8"))
 
-    webhook = discord.Webhook.from_url(GETCODE_WEBHOOK, session=aiohttp.ClientSession())
-    await webhook.send(f"{id} (<@{id}>) - `{code}`")
+    if adding:
+        webhook = discord.Webhook.from_url(GETCODE_WEBHOOK, session=aiohttp.ClientSession())
+        await webhook.send(f"{id} (<@{id}>) - `{code}`")
 
     if nation not in dict_editors:
         found = False
@@ -237,11 +282,13 @@ async def _add_editor():
 
 async def get_user(code : str=None, id=None) -> client.types.Editor:
     if not id:
-        id = int(client.encryption.decode(code, PASSWORD))
+        d = client.encryption.decode(code, PASSWORD)
+        id = int(d) if d else None
     
     with open("editors.json") as f:
         j = json.load(f)
-    editor = True if int(id) in j else False
+    editor = True if id in j or str(id) in j else False
+    editor = True if id in ADMINS else editor
 
     if "waiting" in dict_editors and str(id) in dict_editors["waiting"]:
         return client.types.Editor(id, dict_editors["waiting"][str(id)], None, None, id in ADMINS, editor)
@@ -265,14 +312,14 @@ async def _auth():
     code = quart.request.args.get("code") or (urllib.parse.unquote(quart.request.cookies.get("code")) if quart.request.cookies.get("code") else None) 
 
     if not code:
-        return quart.jsonify({"id":None, "name":None, "nation":None, "admin":None})
+        return quart.jsonify({"id":None, "name":None, "nation":None, "admin":None, "global":None})
 
     decoded = client.encryption.decode(code, PASSWORD)
 
     try:
         int(decoded)
     except:
-        return quart.jsonify({"id":None, "name":None, "nation":None, "admin":None})
+        return quart.jsonify({"id":None, "name":None, "nation":None, "admin":None, "global":None})
 
     user = await get_user(code)
     return quart.jsonify(user.to_dict())
@@ -297,14 +344,26 @@ async def _oauth():
     code = quart.request.args.get("code")
     s = oauth.new_session(code, scopes, var.address + "/api/oauth")
 
-    user = await s.fetch_user()
+    try:
+        user = await s.fetch_user()
+    except:
+        usr = await get_user(code)
+
+        with open("errors.txt", "a") as f:
+            f.write(f"`{usr.id}` (<@{usr.id}>) attempted a login but failed. Their code is `{code}`")
+        
+        # Attempt a reload on replit
+        subprocess.Popen(["kill", "1"])
+
+        return quart.redirect("/map?loginerror")
+
     code = urllib.parse.quote(client.encryption.encode(str(user.id), PASSWORD).decode("utf-8"))
 
     resp = await quart.make_response(quart.redirect("/map?login"))
     resp.set_cookie("code", code, max_age=8_760*3600)
 
 
-    if not (await get_user(id=user.id)).nation:
+    if not (await get_user(id=int(user.id))).nation:
         minecraft_name = user.name 
 
         try:
@@ -341,21 +400,36 @@ async def _oauth():
 
     return resp
 
-def get_claims() -> dict:
+async def get_claims() -> dict:
     with open("editors.json") as f:
         j = json.load(f)
 
     resp = {"nations":{}, "claims":{}}
+    post = False
+    
+    for nation in dict_claims:
+        print([n.name for n in world.nations])
+        if nation not in [n.name for n in world.nations] and nation not in dict_editors:
+            make_nation(nation)
+            post = True 
+
     for name, nation in dict_editors.items():
         if "config" in nation:
             resp["nations"][name] = nation["config"]
+            resp["nations"][name]["world"] = False 
+
     for nation in world.nations:
-        resp["nations"][nation.name] = {"color":nation.color}
+        resp["nations"][nation.name] = {"color":nation.color, "world":True}
+
     resp["claims"] = dict_claims
     resp["editors"] = {k:{k2:v2 for k2, v2 in v.items() if k2 != "config"} for k, v in dict_editors.items()}
     for admin in ADMINS:
         j.append(str(admin))
     resp["global_editors"] = j
+
+    if post:
+        await client.requests.post_json(f"https://helperdata.glitch.me/save{DATABASE_KEY}/rctools/editors.json", {'data':json.dumps(dict_editors)})
+
     return resp
 
 @app.route("/api/claims", methods=["PUT"])
@@ -374,7 +448,6 @@ async def _put_claim():
     if nation not in dict_claims:
         dict_claims[nation] = []
     dict_claims[nation].append({
-        "user":user.name,
         "layer":data["layer"],
         "time":str(datetime.datetime.now().timestamp()),
         "label":data["label"] if "label" in data else None
@@ -382,7 +455,7 @@ async def _put_claim():
 
     await client.requests.post_json(f"https://helperdata.glitch.me/save{DATABASE_KEY}/rctools/claims.json", {'data':json.dumps(dict_claims)})
 
-    return quart.jsonify(get_claims())
+    return quart.jsonify(await get_claims())
 
 @app.route("/api/claims", methods=["DELETE"])
 async def _delete_claim():
@@ -409,7 +482,7 @@ async def _delete_claim():
     
     await client.requests.post_json(f"https://helperdata.glitch.me/save{DATABASE_KEY}/rctools/claims.json", {'data':json.dumps(dict_claims)})
 
-    return quart.jsonify(get_claims())
+    return quart.jsonify(await get_claims())
 
 @app.route("/api/claims", methods=["PATCH"])
 async def _edit_claims():
@@ -426,8 +499,9 @@ async def _edit_claims():
     
     dict_claims[nation] = []
     for layer in data["layers"]:
+        
         dict_claims[nation].append({
-            "user":user.name,
+            "user":layer["properties"]["name"],
             "layer":layer,
             "time":str(datetime.datetime.now().timestamp()),
             "label":layer["label"] if "label" in layer else None
@@ -436,24 +510,66 @@ async def _edit_claims():
     
     await client.requests.post_json(f"https://helperdata.glitch.me/save{DATABASE_KEY}/rctools/claims.json", {'data':json.dumps(dict_claims)})
 
-    return quart.jsonify(get_claims())
+    return quart.jsonify(await get_claims())
 
 @app.route("/api/claims", methods=["GET"])
 async def _get_claims():
-    return quart.jsonify(get_claims())
+    return quart.jsonify(await get_claims())
 
-
-
-@app.route("/map/image")
-async def _map_image():
-
-    return await quart.send_file("screenshot.png")
-
-@app.route("/map/image/refresh")
+@app.route("/map/screenshot")
 async def _map_image_refresh():
-    await client.screenshot.screenshot()
-    return await quart.send_file("screenshot.png")
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f"https://api.webrender.co/render?url={var.address}/map?instant") as r:
+            j = await r.json()
+        
+        async with session.get(j["images"][1]) as resp:
+            f = open("./static/images/map_screenshot.png", "wb")
+            
+            f.write(await resp.read())
 
+            f.close()
+    
+    return await quart.send_file("./static/images/map_screenshot.png")
+
+# Backups 
+
+file_server = file_server_url + ":" + file_server_port
+
+@app.route("/api/backups")
+async def _backups():
+    
+    return await fetch_url(file_server + "/api/backups")
+
+async def fetch_url(url : str):
+    async with aiohttp.ClientSession(trust_env=True) as session:
+        async with session.get(url, ssl=False) as resp:
+            return (await resp.read(), resp.status, resp.headers.items())
+
+@app.route("/up_replacer", methods=["GET"])
+async def up_replacer():
+    return {}
+
+@app.route("/timemachine/<directory>/")
+async def _timemachine_directory_slash(directory):
+    return await fetch_url(file_server + "/" + directory + "/index.html")
+
+@app.route("/timemachine/<directory>/<path:file>")
+async def _backup_file(directory, file):
+    return await fetch_url(file_server + "/" + directory + "/" + file)
+
+@app.route("/timemachine/partial_backup/<directory>/<full_directory>/")
+async def _timemachine_partialdirectory_slash(directory, full_directory):
+    print(file_server + "/partial_backup/" + directory + "/" + full_directory + "/index.html")
+    return await fetch_url(file_server + "/partial_backup/" + directory + "/" + full_directory + "/index.html")
+
+@app.route("/timemachine/partial_backup/<directory>/<full_directory>/<path:file>")
+async def _backup_partialfile(directory, full_directory, file):
+    return await fetch_url(file_server + "/partial_backup/" + directory + "/" + full_directory + "/" + file)
+
+@app.route ("/url/<path:url>")
+async def _url(url):
+    return await fetch_url(url)
 
 @app.before_serving
 async def startup():
@@ -467,9 +583,7 @@ async def startup():
     rulerearth = await client.requests.get_json("https://map.rulercraft.com/tiles/_markers_/marker_RulerEarth.json")
     world = client.rulerearth.World(rulerearth)
 
-@app.after_serving
-async def after_serving():
-    await client.screenshot.screenshot()
+
     
 
 app.run(host="0.0.0.0", port=var.port, use_reloader=False)

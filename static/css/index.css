@@ -10,10 +10,11 @@
     overflow: hidden;
 }
 .description {
-    font-size:20px;
+    font-size:30px;
     color:white;
     font-weight:100;
     top:190px;
+    text-align: center;
 }
 
 .info-container {
@@ -38,7 +39,10 @@
     text-decoration: none;
     background-size:200%;
     background-position:50% 50%;
-    box-shadow: 10px 10px 15px black
+    box-shadow: 10px 10px 15px black;
+    
+    min-height:280px;
+    margin-bottom:50px
 }
 .info-box:hover {
     filter:brightness(150%);
@@ -67,7 +71,7 @@
 .sources {
     bottom:15px;
     right:0;
-    position:absolute;
+    position:fixed;
 
 }
 .source {

@@ -26,6 +26,7 @@ navbar = document.getElementById("navbar")
 navbar_chevron = document.getElementById("navbar-chevron")
 
 navbar_chevron.onclick = async function() {
+    if (window.location.hostname.includes("time")) return
 
     if (!window.localStorage.getItem("navbarClosed") || window.localStorage.getItem("navbarClosed") == "false") {
         window.localStorage.setItem("navbarClosed", true)
@@ -39,6 +40,7 @@ document.getElementById("navbar-home").onclick = async function(e) {
     e.preventDefault()
     window.localStorage.setItem("navbarClosed", true)
     await refreshNavbar()
+    if (window.location.hostname.includes("time")) window.localStorage.setItem("navbarClosed", false)
     setTimeout(async function() {
         window.open(document.getElementById("navbar-home").href, "_self")
     }, 500)
@@ -51,7 +53,7 @@ async function refreshNavbar() {
         if (element.classList.contains("navbar-item") ) {
             if (window.localStorage.getItem("navbarClosed") == null || window.localStorage.getItem("navbarClosed") == "false") {
                 if (element.classList.contains("navbar-logo")) {
-                    element.style.width = "20vw"
+                    element.style.width = "15vw"
                 } else {
                     element.style.width = "10vw"
                 }
@@ -66,7 +68,8 @@ async function refreshNavbar() {
         }
     }
 }
-if (window.location.pathname == "/") {
+
+if (window.location.pathname == "/" && !window.location.hostname.includes("time")) {
     window.localStorage.setItem("navbarClosed", true)
 }
 refreshNavbar()

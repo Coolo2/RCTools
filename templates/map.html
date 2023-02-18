@@ -3,7 +3,7 @@
         <meta property="og:type" content="website">
         <meta property="og:title" content="RCTools - RulerCraft Claim Map" />
         <meta property="og:description" content="A map of nations' wanted claims and claimed regions - A part of RCTools by Coolo2" />
-        <meta property="og:image" content="/map/image" />
+        <meta property="og:image" content="/static/images/map_screenshot.png" />
         <meta name="theme-color" content="#6F01FF">
 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
@@ -22,6 +22,7 @@
             <a class="navbar-item" href="/time"><div class="all-center">Time</div></a>
             <a class="navbar-item" href="/map"><div class="all-center">Map</div></a>
             <a class="navbar-item" href="/bot"><div class="all-center">Bot</div></a>
+            <a class="navbar-item" href="/timemachine"><div class="all-center">Time Machine</div></a>
             <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right transition"></i></div></div>
         </div>
         <div class="edit noselect" id="edit">
@@ -63,6 +64,22 @@
                     <div class="modal-text">You can message Coolo2#5499 for a code which can be used for login instead.</div>
                     <div class="modal-text">
                         <input class="input" placeholder="Enter code here..." id="login-code">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal micromodal-slide noselect" id="modal-loginerror" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                    <div class="modal-title">:(</div>
+                    <div class="modal-text">
+                        You ran into an error while logging in. 
+                        <br>
+                        The website is currently attempting a reload. Opening pages will not work while it is reloading. (this may take around a minute)
+                        <br>
+                        Once the reload is finished, please try again.
+                        <br>
+                        If it does not work after trying again, please use a code instead (message Coolo2 for an access code). 
                     </div>
                 </div>
             </div>
@@ -118,6 +135,18 @@
                         <form autocomplete="off" action="/api/remove_editor">
                             <select class="button editors-select" name="name">
                                 <option value="" disabled selected>Select an editor (can type)</option>
+                            </select>
+                            <input type="submit" class="button" value="Submit">
+                        </form> 
+                    </div>
+                    <div class="modal-text">
+                        Move Nation Data
+                        <form action="/api/move_nation">
+                            <select class="button non-world-nation-select" name="old_nation">
+                                <option value="" disabled selected>Old Nation</option>
+                            </select>
+                            <select class="button world-nation-select" name="new_nation">
+                                <option value="" disabled selected>New Nation</option>
                             </select>
                             <input type="submit" class="button" value="Submit">
                         </form> 

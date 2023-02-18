@@ -3,6 +3,12 @@ sql/
 *.db
 cache/
 
+timemachine/backups/*
+!timemachine/backups/.gitkeep 
+
+timemachine/partial_backups/*
+!timemachine/partial_backups/.gitkeep 
+
 test.py
 discordoauth/
 # Byte-compiled / optimized / DLL files

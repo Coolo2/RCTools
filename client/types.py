@@ -9,4 +9,4 @@ class Editor():
         self.editor = True if admin else editor
     
     def to_dict(self) -> dict:
-        return {"id":self.id, "name":self.name, "nation":self.nation, "config":self.nation_config, "admin":self.admin, "editor":self.editor}
+        return {"id":self.id, "name":self.name, "nation":self.nation, "config":self.nation_config, "admin":self.admin, "global":self.editor}
