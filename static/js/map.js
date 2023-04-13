@@ -81,7 +81,7 @@ async function auth() {
                 if (item[0] == "adminCode") {
                     document.getElementById("adminCode").innerText = item[1]
                 }
-                if (user.global) {
+                if (user.editor) {
                     if (item[0] == "as") {
                         viewNation = item[1]
                     }
@@ -122,7 +122,7 @@ async function auth() {
         map.addControl(drawControl);
     }
     console.log(user)
-    if (user.global) {
+    if (user.editor) {
         document.getElementById("select-nations-wrapper").style.display = "block"
     }
     if (user.admin) {

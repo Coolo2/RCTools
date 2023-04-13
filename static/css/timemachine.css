@@ -48,7 +48,7 @@ h3 {
     transition:filter .5s, background-size .5s, box-shadow .5s, transform .1s;
     text-decoration: none;
     box-shadow: 10px 10px 15px black;
-    margin-bottom:50px
+    margin-bottom:35px
 }
 .info-box:hover {
     filter:brightness(150%);
@@ -72,10 +72,7 @@ h3 {
     text-align: center;
     line-height: 25px;
 }
-#title {
-    position:absolute;
-    left:20px;
-}
+
 
 #backup-frame {
     width:99%;
@@ -111,7 +108,7 @@ h3 {
     left:10px;
     border-radius:3px;
     width:300px;
-    height:50px;
+    
     color:white;
     z-index:51;
     font-size:20px;
@@ -125,18 +122,21 @@ h3 {
     left:25%
 }
 
-.info-top-right {
-    position:absolute;
-    top:10px;
-    right:10px;
-    height:250px;
-    width:35vw;
+.info-bottom {
+    position:fixed;
+    bottom:0;
+    left:20px;
+    width:calc(100% - 40px);
+    text-align:center;
+    background-color:#23272A;
+    border-top:1px solid gray
 }
 
 .info-check {
     position:absolute;
     right:0;
-    color:white
+    color:white;
+    margin-top:10px;
 }
 
 .info-progress {
@@ -145,4 +145,37 @@ h3 {
     position:absolute;
     left:0;
     top:0;
+}
+
+#skip-frame {
+    background-color: #222222;
+    position:fixed;
+    bottom:140px;
+    right:50px;
+    border-radius:3px;
+    width:100px;
+    height:40px;
+    color:white;
+    z-index:52;
+    font-size:30px;
+    
+    box-shadow:2px 2px 1px black;
+}
+.skip-button {
+    cursor:pointer;
+    float:left;
+    width:50%;
+    height:100%;
+    position:relative;
+    padding:5px 10px;
+    box-sizing: border-box;
+    z-index:52;
+}
+.skip-button:hover {
+    background-color:rgb(255, 255, 255, 0.2)
+}
+.disabled {
+    background-color:rgb(255, 255, 255, 0.2);
+    color:gray;
+    cursor:not-allowed
 }

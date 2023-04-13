@@ -22,57 +22,59 @@ def full_backup():
     # 5: Import tiles
 
     strtime = "%d_%m_%y"
-
-    #1
     dir = "backup_" + datetime.datetime.now().strftime(strtime)
-    copy_tree("./template", "./backups/" + dir)
     backup_path = "./backups/" + dir
 
-    #2 
-    with open(backup_path + "/standalone/config.js", "w") as f:
-        f.write(f"""
-    var config = {{
-        url : {{
-        configuration: 'up/configuration',
-        update: '/up_replacer',
-        sendmessage: 'up/sendmessage',
-        login: 'up/login',
-        register: 'up/register',
-        tiles: '{file_server_url}:{port}/{dir}/tiles/',
-        markers: '{file_server_url}:{port}/{dir}/tiles/'
-        }}
-    }};
-        """)
+    # Dont replace towny data if it exists already
+    if not os.path.exists(backup_path + "/tiles/_markers_/marker_RulerEarth.json"):
+        #1
+        copy_tree("./template", backup_path)
 
-    #3
-    r = requests.get(base + "/tiles/_markers_/marker_RulerEarth.json")
-    filename = backup_path + "/tiles/_markers_/marker_RulerEarth.json"
+        #2 
+        with open(backup_path + "/standalone/config.js", "w") as f:
+            f.write(f"""
+        var config = {{
+            url : {{
+            configuration: 'up/configuration',
+            update: '/up_replacer',
+            sendmessage: 'up/sendmessage',
+            login: 'up/login',
+            register: 'up/register',
+            tiles: '{file_server_url}:{port}/{dir}/tiles/',
+            markers: '{file_server_url}:{port}/{dir}/tiles/'
+            }}
+        }};
+            """)
 
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+        #3
+        r = requests.get(base + "/tiles/_markers_/marker_RulerEarth.json")
+        filename = backup_path + "/tiles/_markers_/marker_RulerEarth.json"
 
-    with open(filename, "wb") as f:
-        f.write(r.content)
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    #4
-    r = requests.get(base + "/up/configuration")
-    filename = backup_path + "/up/configuration"
+        with open(filename, "wb") as f:
+            f.write(r.content)
 
-    j = r.json()
-    j["components"] = [
-        {
-        "show-mcr": False,
-        "label": "Location",
-        "type": "coord",
-        "show-chunk": False,
-        "hidey": True
-        }
-    ]
-    j["worlds"][0]["maps"][0]["image-format"] = "png"
-    j["worlds"][0]["maps"][0]["mapzoomin"] = -1
+        #4
+        r = requests.get(base + "/up/configuration")
+        filename = backup_path + "/up/configuration"
 
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w") as f:
-        json.dump(j, f, indent=4)
+        j = r.json()
+        j["components"] = [
+            {
+            "show-mcr": False,
+            "label": "Location",
+            "type": "coord",
+            "show-chunk": False,
+            "hidey": True
+            }
+        ]
+        j["worlds"][0]["maps"][0]["image-format"] = "png"
+        j["worlds"][0]["maps"][0]["mapzoomin"] = -1
+
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        with open(filename, "w") as f:
+            json.dump(j, f, indent=4)
     
     renderer.new_render(dir)
     

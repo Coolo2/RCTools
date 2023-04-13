@@ -15,6 +15,7 @@ load_dotenv()  # take environment variables from .env.
 
 strtime = "%d_%m_%y"
 port = os.getenv("file_server_port")
+main_url = os.getenv("main_url")
 
 production = False
 app = quart.Quart(__name__, static_url_path='/', 
@@ -27,7 +28,7 @@ if production == False:
 
 @app.route("/")
 async def _home():
-    return await quart.render_template("timemachine.html")
+    return await quart.render_template("timemachine.html", main_url=main_url)
 
 @app.route("/timemachine/partial_backup/<partial_backup>/<full_backup>/<path:file>")
 async def _partial_backup(partial_backup, full_backup, file):
@@ -57,8 +58,8 @@ def nearest(items, pivot) -> datetime.datetime:
 
 @app.route("/api/backups")
 async def _backups():
-    backups = os.listdir("backups")
-    partial_backups = os.listdir("partial_backups")
+    backups = next(os.walk('./backups'))[1]
+    partial_backups = next(os.walk('./partial_backups'))[1]
 
     formatted : typing.List[dict] = []
 
@@ -89,15 +90,24 @@ async def _backups():
         
     for backup in partial_backups:
         date = datetime.datetime.strptime(backup.replace("partial_backup_", ""), "%d_%m_%y_%H_%M")
+
+        nearest_full = f"backup_{str(date.day).zfill(2)}_{str(date.month).zfill(2)}_{str(date.year)[2:]}"
+        if not os.path.exists("./backups/" + nearest_full + "/"):
+            nearest_full = "backup_" + nearest(full_dates, date).strftime(strtime)
         
+        hours_since = int((datetime.datetime.now() - date).total_seconds()/3600)
+
+        hours_since_string = f"{hours_since}h" if hours_since < 24 else f"{hours_since//24}d{hours_since%24}h"
+
         formatted.append(
             {
                 "type":"partial",
-                "formatted_date":date.strftime("%A, %d %B %Y at %H:%M"),
-                "hours_since":int((datetime.datetime.now() - date).total_seconds()/3600),
+                "formatted_date":date.strftime("%A, %d %B %Y at %H:%M GMT"),
+                "hours_since":hours_since_string,
                 "directory":backup,
-                "nearest_full":"backup_" + nearest(full_dates, date).strftime(strtime),
-                "timestamp":date.timestamp()
+                "nearest_full":nearest_full,
+                "timestamp":date.timestamp(),
+                "nearest_full_formatted_date":datetime.datetime.strptime(nearest_full.replace("backup_", ""), strtime).strftime("%A, %d %B %Y")
             }
         )
     
@@ -121,21 +131,30 @@ async def _backup_file(directory, file):
 async def _timemachine_partialdirectory_slash(directory, full_directory):
     return await quart.send_file("./backups/" + full_directory + "/index.html")
 
+counter = 0
+
 async def _prune():
-
+    global counter
+    
     while True:
-        prune.prune()
+        
+        if datetime.datetime.now().minute == 0:
+            print("min 1")
 
-        # Create new backup if needed
-        subprocess.Popen(["python", "make_backup.py", "full_backup"])
+            prune.prune()
+            
+            # Create new partial backup if needed
+            partial_backups = next(os.walk('./partial_backups'))[1]
+            if "partial_backup_" + datetime.datetime.now().strftime("%d_%m_%y_%H_00") not in partial_backups:
+                make_backup.partial_backup()
         
+        if counter % 60 == 0:
+            # Create new backup if needed
+            subprocess.Popen(["python", "make_backup.py", "full_backup"])
         
-        # Create new partial backup if needed
-        partial_backups = os.listdir("partial_backups")
-        if "partial_backup_" + datetime.datetime.now().strftime("%d_%m_%y_%H_00") not in partial_backups:
-            make_backup.partial_backup()
+        counter += 1
         
-        await asyncio.sleep(1800)
+        await asyncio.sleep(57)
 
 @app.before_serving
 async def startup():

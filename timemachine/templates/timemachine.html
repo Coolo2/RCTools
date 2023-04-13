@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>RCTools - RulerCraft Time</title>
+        <title>RCTools - RC Time Machine</title>
         
         <meta property="og:type" content="website">
         <meta property="og:title" content="RCTools - Time Machine" />
@@ -11,33 +11,34 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
         <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css">
 
-        <link rel="stylesheet" href="https://rctools.coolo2.repl.co/static/css/global.css">
-        <link rel="stylesheet" href="https://rctools.coolo2.repl.co/static/css/timemachine.css">
+        <link rel="stylesheet" href="{{main_url}}/static/css/global.css">
+        <link rel="stylesheet" href="{{main_url}}/static/css/timemachine.css">
         
     </head>
     
     <body>
         
         <div class="navbar noselect" id="navbar">
-            <a class="navbar-item navbar-logo" href="https://rctools.coolo2.repl.co/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
-            <a class="navbar-item" href="https://rctools.coolo2.repl.co/time"><div class="all-center">Time</div></a>
-            <a class="navbar-item" href="https://rctools.coolo2.repl.co/map"><div class="all-center">Map</div></a>
-            <a class="navbar-item" href="https://rctools.coolo2.repl.co/bot"><div class="all-center">Bot</div></a>
+            <a class="navbar-item navbar-logo" href="{{main_url}}/" id="navbar-home"><div class="all-center">RulerCraft Tools</div></a>
+            <a class="navbar-item" href="{{main_url}}/time"><div class="all-center">Time</div></a>
+            <a class="navbar-item" href="{{main_url}}/map"><div class="all-center">Map</div></a>
+            <a class="navbar-item" href="{{main_url}}/bot"><div class="all-center">Bot</div></a>
             <a class="navbar-item" href="/"><div class="all-center">Time Machine</div></a>
             <div class="navbar-collapse" aria-label="Collapse" data-balloon-pos="down" id="navbar-chevron"><div class="all-center"><i class="fa-solid fa-chevron-right transition"></i></div></div>
         </div>
 
-        <h1 id="title">RulerCraft Time Machine<p>Click on a render below and view the RulerCraft map through history</p></h1>
+        <h1 class="horizontal-center" style="top:100px;">RulerCraft Time Machine</h1>
+        <p class="horizontal-center" style="top:190px;">Click on a render below and view the RulerCraft map through history</p>
         
 
         <example id="selector-example-full">
-            <div class="info-box noselect" %style% data-tilt data-tilt-axis="x" openNavbar onclick="openMap('%url%', '%date%', '%type%')">
+            <div class="info-box noselect" %style% data-tilt data-tilt-axis="x" openNavbar onclick="openMap('%url%', '%date%', '%type%', '%index%')">
                 <div class="info-title">Render: %date% (%daysago% days ago)</div>
             </div>
         </example>
         <example id="selector-example-partial">
-            <div class="info-box small-box noselect" data-tilt data-tilt-axis="x" openNavbar onclick="openMap('%url%', '%date%', '%type%')">
-                <div class="info-description">Partial Render: %date% (%hoursago% hours ago)</div>
+            <div class="info-box small-box noselect" data-tilt data-tilt-axis="x" openNavbar onclick="openMap('%url%', '%date%', '%type%', '%index%')">
+                <div class="info-description">Partial Render: %date% (%hoursago% ago)<br><span style='color:#FFFFFF50;font-size:20px;'>[Using full render from %fulldate% for images]</span></div>
             </div>
         </example>
         
@@ -45,14 +46,20 @@
         </div>
 
         <iframe id="backup-frame" style="display:none"></iframe>
+        <div id="skip-frame" style="display:none">
+            <div id="skip-back" aria-label="Previous Render" data-balloon-pos="left" class="skip-button" onclick="skip(1)"><i class="fa-solid fa-chevron-up" style="transform:rotate(-90deg)" class="all-center" ></i></div>
+            <div id="skip-forward" aria-label="Next Render" data-balloon-pos="down" class="skip-button" onclick="skip(-1)"><i class="fa-solid fa-chevron-up" style="transform:rotate(90deg)" class="all-center"></i></div>
+        </div>
         <div id="close-frame" data-balloon-visible aria-label="Close Map" data-balloon-pos="left" style="display:none"><div class="all-center">x</div></div>
-        <div id="frame-info" style="display:none">Render: %date% (%daysago% days ago) </div>
-        <div class="info-top-right">
+        <div id="frame-info" style="display:none"><span id="frame-info-text">Render: %date% (%daysago% days ago)</span> <span id="frame-info-partial" style='color:#FFFFFF50;font-size:15px;display:none'></span></div>
+        <div class="info-bottom">
             <div class="info-check noselect"><input type="checkbox" id="partial-toggle"><label for="partial-toggle">Hide Partial Renders</label></div>
-            <p>Full renders show the entire map state on the day. Partial renders only save town claim information. They use the nearest full render for map images (builds)</p>
+            <p style="margin-top:40px;">Full renders show the entire map state on the day. Partial renders only save town claim information. They use the nearest full render for map images (builds)</p>
         </div>
     </body>
-    <script src="https://rctools.coolo2.repl.co/static/js/global.js"></script>
-    <script src="https://rctools.coolo2.repl.co/static/js/timemachine.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js" integrity="sha512-efUTj3HdSPwWJ9gjfGR71X9cvsrthIA78/Fvd/IN+fttQVy7XWkOAXb295j8B3cmm/kFKVxjiNYzKw9IQJHIuQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{{main_url}}/static/js/global.js"></script>
+    <script src="{{main_url}}/static/js/timemachine.js"></script>
     
 </html>

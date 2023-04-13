@@ -40,7 +40,7 @@ def new_render(dir):
                 filename = f"./backups/{dir}" + image_path 
                 url = base + image_path
                 if not os.path.exists(filename):
-                    print(f"Downloading zoom {zoom} - {counter}/{totals[zoom]} - {(counter/totals[zoom])*100:,.2f}%")
+                    #print(f"Downloading zoom {zoom} - {counter}/{totals[zoom]} - {(counter/totals[zoom])*100:,.2f}%")
                     r = s.get(url)
 
                     os.makedirs(os.path.dirname(filename), exist_ok=True)
