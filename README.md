@@ -26,6 +26,8 @@ The bot's source code can be found on [its github repo](https://github.com/Coolo
 
 The Time Machine renders the dynmap at regular intervals so you can look through the history of the server through time. 
 
+To run the time machine, download the dynmap frontend and install it in ./timemachine/template
+
 ## Note
 
 RCTools development has been discontinued. The [website](https://rctools.coolo2.repl.co/) will remain up however the Time Machine will be disabled in the future due to running costs.

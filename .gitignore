@@ -9,6 +9,8 @@ timemachine/backups/*
 timemachine/partial_backups/*
 !timemachine/partial_backups/.gitkeep 
 
+timemachine/template
+
 test.py
 discordoauth/
 # Byte-compiled / optimized / DLL files
